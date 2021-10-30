@@ -141,3 +141,10 @@ class SeleniumTestCase(SeleniumBaseTestCase):
         print(self.driver.current_url)
         #In case of a correct loging, a element with id 'user-tools' is shown in the upper right part
         self.assertTrue(len(self.driver.find_elements_by_id('user-tools'))==1)
+
+    def test_incorrect_login(self):
+        self.driver.get(f'{self.live_server_url}/admin')
+        self.driver.find_element_by_id('id_username').send_keys("notanuser")
+        self.driver.find_element_by_id('id_password').send_keys("notapassword",Keys.ENTER)
+        
+        self.assertFalse(len(self.driver.find_elements_by_id('user-tools'))==1)

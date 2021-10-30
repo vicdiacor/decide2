@@ -6,6 +6,8 @@ from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 
 from base import mods
+from base.tests import SeleniumBaseTestCase
+from selenium.webdriver.common.keys import Keys
 
 
 class AuthTestCase(APITestCase):
@@ -128,3 +130,14 @@ class AuthTestCase(APITestCase):
             sorted(list(response.json().keys())),
             ['token', 'user_pk']
         )
+
+class SeleniumTestCase(SeleniumBaseTestCase):
+
+    def test_simpleCorrectLogin(self):
+        self.driver.get(f'{self.live_server_url}/admin/')
+        self.driver.find_element_by_id('id_username').send_keys("admin")
+        self.driver.find_element_by_id('id_password').send_keys("qwerty",Keys.ENTER)
+        
+        print(self.driver.current_url)
+        #In case of a correct loging, a element with id 'user-tools' is shown in the upper right part
+        self.assertTrue(len(self.driver.find_elements_by_id('user-tools'))==1)

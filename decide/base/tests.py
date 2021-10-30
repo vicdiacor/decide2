@@ -3,6 +3,7 @@ from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
 
 from base import mods
 
@@ -45,7 +46,7 @@ class SeleniumBaseTestCase(StaticLiveServerTestCase):
         self.base.setUp()
 
         options = webdriver.ChromeOptions()
-        options.headless = True
+        # options.headless = True
         self.driver = webdriver.Chrome(options=options)
 
         super().setUp()            
@@ -56,3 +57,7 @@ class SeleniumBaseTestCase(StaticLiveServerTestCase):
 
         self.base.tearDown()
     
+    def login(self, username='admin', password='qwerty'):
+        self.driver.get(f'{self.live_server_url}/admin/')
+        self.driver.find_element_by_id('id_username').send_keys(username)
+        self.driver.find_element_by_id('id_password').send_keys(password, Keys.ENTER)

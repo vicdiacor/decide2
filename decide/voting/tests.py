@@ -46,6 +46,27 @@ class VotingTestCase(BaseTestCase):
         v.auths.add(a)
 
         return v
+    
+    def create_voting_one_question_two_options(self):
+        q = Question(desc='test question')
+        q.save()
+        opt1 = QuestionOption(question=q, option='option 1')
+        opt1.save()
+        opt2 = QuestionOption(question=q, option='option 2')
+        opt2.save()
+        v = Voting(name='test voting', question=q)
+        v.save()
+
+        a, _ = Auth.objects.get_or_create(url=settings.BASEURL,
+                                          defaults={'me': True, 'name': 'test auth'})
+        a.save()
+        v.auths.add(a)
+
+        return v
+    
+    def test_create_voting_one_question_two_options(self):
+        v = self.create_voting_one_question_two_options()
+        self.assertEquals(v.question.options.all()[0].option, 'option 1')
 
     def create_voters(self, v):
         for i in range(100):

@@ -19,7 +19,7 @@ class BaseTestCase(APITestCase):
         user_noadmin.set_password('qwerty')
         user_noadmin.save()
 
-        user_admin = User(username='admin', is_staff=True)
+        user_admin = User(username='admin', is_staff=True, is_superuser=True)
         user_admin.set_password('qwerty')
         user_admin.save()
 
@@ -46,7 +46,7 @@ class SeleniumBaseTestCase(StaticLiveServerTestCase):
         self.base.setUp()
 
         options = webdriver.ChromeOptions()
-        # options.headless = True
+        options.headless = True
         self.driver = webdriver.Chrome(options=options)
 
         super().setUp()            

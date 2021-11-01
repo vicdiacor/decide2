@@ -15,7 +15,7 @@ from mixnet.mixcrypt import MixCrypt
 from mixnet.models import Auth
 from voting.models import Voting, Question, QuestionOption
 from base.tests import SeleniumBaseTestCase
-
+import re
 
 class VotingTestCase(BaseTestCase):
 
@@ -249,36 +249,17 @@ class VotingTestCase(BaseTestCase):
 class SeleniumTestCase(SeleniumBaseTestCase):    
 
     def test_create_question(self):
-        self.login()        
+        self.login()
+        self.driver.find_element_by_link_text('Questions').click()
+        self.driver.find_element_by_class_name('object-tools').click()
+        self.driver.find_element_by_id('id_desc').send_keys('Descripción de prueba')
+        self.driver.find_element_by_id('id_options-0-number').send_keys('1')
+        self.driver.find_element_by_id('id_options-0-option').send_keys('Opción 1')
+        self.driver.find_element_by_id('id_options-1-number').send_keys('2')
+        self.driver.find_element_by_id('id_options-1-option').send_keys('Opción 2')
+        self.driver.find_element_by_name('_save').click()
         
-        # A partir de ahora va a estar usando la interfaz gráfica de la API debido a que el usuario admin no tiene permisos suficientes
+        # Checks if it is stored in the database
+        self.driver.find_element_by_link_text('Descripción de prueba').click()
 
-        # self.driver.find_element_by_xpath('//*[@id="content-main"]/div[7]/table/tbody/tr[1]/th/a').click() # Xpath a questions
-
-        # self.driver.get(f'{self.live_server_url}/voting')
-        # voting_json_content = '''{
-        #                             "name": "",
-        #                             "desc": "",
-        #                             "question": {
-        #                                 "desc": "",
-        #                                 "options": []
-        #                             },
-        #                             "start_date": null,
-        #                             "end_date": null,
-        #                             "pub_key": {
-        #                                 "p": null,
-        #                                 "g": null,
-        #                                 "y": null
-        #                             },
-        #                             "auths": [],
-        #                             "tally": null,
-        #                             "postproc": null
-        #                         }'''
-        # self.driver.find_element_by_xpath('//*[@id="content"]/div[3]/ul/li[2]/a').click()
-        # self.driver.find_element_by_xpath('//*[@id="id__content"]').clear()
-        # self.driver.find_element_by_xpath('//*[@id="id__content"]').send_keys(voting_json_content)
-        # self.driver.find_element_by_xpath('//*[@id="post-generic-content-form"]/form/fieldset/div[3]/button').click()
-        # import time
-        # time.sleep(100)
-
-        self.assertEquals(self.driver.current_url, f'{self.live_server_url}/admin/voting/question/')
+        self.assertTrue(re.fullmatch(f'{self.live_server_url}/admin/voting/question/\\d*?/change/', self.driver.current_url))

@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.postgres.fields import JSONField
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.core.validators import validate_comma_separated_integer_list
+
 
 from base import mods
 from base.models import Auth, Key
@@ -32,6 +34,9 @@ class Voting(models.Model):
     name = models.CharField(max_length=200)
     desc = models.TextField(blank=True, null=True)
     question = models.ForeignKey(Question, related_name='voting', on_delete=models.CASCADE)
+
+    # Campo groups en votacion
+    groups = models.CharField(validators=[validate_comma_separated_integer_list],max_length=200, blank=True, null=True,default='')
 
     start_date = models.DateTimeField(blank=True, null=True)
     end_date = models.DateTimeField(blank=True, null=True)

@@ -4,11 +4,18 @@ from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.response import Response
+from django.contrib.auth.models import User, Group
+from rest_framework.status import (
+        HTTP_409_CONFLICT as ST_409
+)
+from django.db.utils import IntegrityError
+
 
 from .models import Question, QuestionOption, Voting
 from .serializers import SimpleVotingSerializer, VotingSerializer
 from base.perms import UserIsStaff
 from base.models import Auth
+from census.models import Census
 
 
 class VotingView(generics.ListCreateAPIView):
@@ -46,6 +53,41 @@ class VotingView(generics.ListCreateAPIView):
                                           defaults={'me': True, 'name': 'test auth'})
         auth.save()
         voting.auths.add(auth)
+
+
+	    ################
+        # Añadir todos los usuarios del grupo a la votación
+        
+        # Coges el id de cada grupo de la votación
+        groups = request.data.get('groups')
+
+        # Comprueba que el id del grupo no es null o blank
+        if (groups != '' and groups!=None):
+            print('ENTRA EN EL IF')
+            groupsIds = list(groups.split(','))
+
+        # Obtener todos los usuarios que pertenecen al grupo
+            for id in groupsIds:
+                print(id)
+                group = Group.objects.get(pk=int(id))
+                print(group)
+                voters = User.objects.filter(groups=group)
+                print(voters)
+
+                # Por cada usuario
+                # Añadir al censo de dicha votación
+                voting_id = Voting.objects.get(name=request.data.get('name')).pk
+                print(voting_id)
+                try:
+                    for voter in voters:
+                        census = Census(voting_id=voting_id, voter_id=voter.pk)
+                        census.save()
+                except IntegrityError:
+                    return Response('Error try to create census', status=ST_409)
+                
+        ###############
+
+
         return Response({}, status=status.HTTP_201_CREATED)
 
 

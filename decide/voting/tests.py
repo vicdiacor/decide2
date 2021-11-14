@@ -1,8 +1,9 @@
+from os import name
 import random
 import itertools
 from django.utils import timezone
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.test import TestCase
 from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
@@ -20,6 +21,20 @@ import re
 class VotingTestCase(BaseTestCase):
 
     def setUp(self):
+        # Crea un grupo con dos usuarios para probar el funcionamiento de los grupos en las votaciones
+        g1 = Group(name='Grupo 1', pk=100)
+        g1.save()
+
+        u1 = User(username='username1Grupo1', password='password')
+        u1.save()
+        u1.groups.set([g1])
+        u1.save()
+
+        u2 = User(username='username2Grupo1', password='password')
+        u2.save()
+        u2.groups.set([g1])
+        u2.save()
+
         super().setUp()
 
     def tearDown(self):
@@ -147,7 +162,8 @@ class VotingTestCase(BaseTestCase):
             'name': 'Example',
             'desc': 'Description example',
             'question': 'I want a ',
-            'question_opt': ['cat', 'dog', 'horse']
+            'question_opt': ['cat', 'dog', 'horse'],
+            'groups':'100'
         }
 
         response = self.client.post('/voting/', data, format='json')

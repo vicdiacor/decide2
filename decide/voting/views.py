@@ -16,6 +16,7 @@ from .serializers import SimpleVotingSerializer, VotingSerializer
 from base.perms import UserIsStaff
 from base.models import Auth
 from census.models import Census
+import re
 
 
 class VotingView(generics.ListCreateAPIView):
@@ -63,6 +64,9 @@ class VotingView(generics.ListCreateAPIView):
 
         # Comprueba que el id del grupo no es null o blank
         if (groups != '' and groups!=None):
+            if (re.match('^[\d,]+$', groups)):
+                return Response({}, status=status.HTTP_400_BAD_REQUEST)
+            
             print('ENTRA EN EL IF')
             groupsIds = list(groups.split(','))
 

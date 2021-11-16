@@ -391,12 +391,26 @@ class SeleniumTestCase(SeleniumBaseTestCase):
         
         # Checks if it is stored in the database
         self.driver.find_element_by_link_text('Votacion de prueba').click()
-
         self.assertTrue(re.fullmatch(f'{self.live_server_url}/admin/voting/voting/\\d*?/change/', self.driver.current_url))
         
+
         # Comprueba que hay usuarios en el censo de dicha votacion
         self.driver.get(f'{self.live_server_url}/admin/census/census/')
         self.driver.find_element_by_tag_name(name='tr')
+
+        # Compruebo que funciona el update de la votacion
+        self.driver.get(f'{self.live_server_url}/admin/voting/voting/')
+        self.driver.find_element_by_link_text('Votacion de prueba').click()
+        self.driver.find_element_by_id('id_name').send_keys(' modificada')
+        self.driver.find_element_by_id('id_groups').clear()
+        self.driver.find_element_by_name('_save').click() 
+        self.driver.find_element_by_link_text('Votacion de prueba modificada').click()
+        self.assertTrue(re.fullmatch(f'{self.live_server_url}/admin/voting/voting/\\d*?/change/', self.driver.current_url))
+        
+        self.driver.get(f'{self.live_server_url}/admin/census/census/')
+        self.assertEquals(len(self.driver.find_elements_by_tag_name(name='tr')), 0)
+
+
 
     
     # Varios casos incorrectos

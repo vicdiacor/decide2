@@ -52,6 +52,10 @@ class VotingAdmin(admin.ModelAdmin):
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
 
+        # Borro todos los censos de la votacion (actualizar la votacion)
+        voting_id = Voting.objects.all()[Voting.objects.all().count()-1].pk
+        Census.objects.filter(voting_id=voting_id).delete()
+
         groups = obj.groups
 
         # Comprueba que el id del grupo no es null o blank
@@ -68,7 +72,8 @@ class VotingAdmin(admin.ModelAdmin):
                 voting_id = Voting.objects.all()[Voting.objects.all().count()-1].pk
                 for voter in voters:
                     census = Census(voting_id=voting_id, voter_id=voter.pk)
-                    census.save()
+                    census.save()                   
+                    
 
 
 admin.site.register(Voting, VotingAdmin)

@@ -51,13 +51,16 @@ class Voting(models.Model):
     postproc = JSONField(blank=True, null=True)
 
 
+    # Comprueba que los grupos indicados en la votacion existen en base de datos
     def clean(self) -> None:
-        ids = list(self.groups.split(","))
-        for id in ids:
-            try:
-                Group.objects.get(pk=int(id))
-            except:
-                raise ValidationError('One o more groups do not exist.')
+        # Si el grupo es vacío no tengo que comprobar la existencia de los grupos
+        if (self.groups!=None):
+            ids = list(self.groups.split(","))
+            for id in ids:
+                try:
+                    Group.objects.get(pk=int(id))
+                except:
+                    raise ValidationError('One o more groups do not exist.')
         return super().clean()
 
     def create_pubkey(self):

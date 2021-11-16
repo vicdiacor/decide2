@@ -287,6 +287,18 @@ class VotingTestCase(BaseTestCase):
         response = self.client.post('/voting/', data, format='json')
         self.assertEqual(response.status_code, 400)
 
+        #intento crear votacion con grupo que no existe
+        data = {
+            'name': 'vot_test2',
+            'desc': 'desc_test2',
+            'question': 'quest_test',
+            'question_opt': ['1', '2'],
+            'groups': '145646'
+        }
+
+        response = self.client.post('/voting/', data, format='json')
+        self.assertEqual(response.status_code, 400)
+
         #formato correcto para groups
         data = {
             'name': 'vot_test2',
@@ -385,4 +397,35 @@ class SeleniumTestCase(SeleniumBaseTestCase):
         # Comprueba que hay usuarios en el censo de dicha votacion
         self.driver.get(f'{self.live_server_url}/admin/census/census/')
         self.driver.find_element_by_tag_name(name='tr')
+
+    
+    # Varios casos incorrectos
+    def test_create_voting_incorrect(self):
+        self.login()
+
+        #formato incorrecto para los grupos
+        self.driver.find_element_by_link_text('Votings').click()
+        self.driver.find_element_by_class_name('object-tools').click()
+        self.driver.find_element_by_id('id_name').send_keys('Votacion de prueba')
+        self.driver.find_element_by_id('id_desc').send_keys('prueba')
+
+        select = Select(self.driver.find_element_by_id('id_question'))
+        select.select_by_visible_text('pregunta de prueba')
+
+        self.driver.find_element_by_id('id_groups').send_keys('prueba')
+
+        select = Select(self.driver.find_element_by_id('id_auths'))
+        select.select_by_visible_text('http://localhost:8000')
+
+        self.driver.find_element_by_name('_save').click()        
+        
+        self.driver.find_element_by_class_name('errornote')
+
+        # compruebo con grupo que no existe
+        self.driver.find_element_by_id('id_groups').send_keys('14367')
+        self.driver.find_element_by_name('_save').click()        
+        
+        self.driver.find_element_by_class_name('errornote')
+
+
 

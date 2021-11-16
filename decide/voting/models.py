@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.postgres.fields import JSONField
 from django.db.models.signals import post_save
@@ -7,6 +8,7 @@ from django.core.validators import validate_comma_separated_integer_list
 
 from base import mods
 from base.models import Auth, Key
+from django.contrib.auth.models import User, Group
 
 
 class Question(models.Model):
@@ -30,6 +32,7 @@ class QuestionOption(models.Model):
         return '{} ({})'.format(self.option, self.number)
 
 
+
 class Voting(models.Model):
     name = models.CharField(max_length=200)
     desc = models.TextField(blank=True, null=True)
@@ -46,6 +49,16 @@ class Voting(models.Model):
 
     tally = JSONField(blank=True, null=True)
     postproc = JSONField(blank=True, null=True)
+
+
+    def clean(self) -> None:
+        ids = list(self.groups.split(","))
+        for id in ids:
+            try:
+                Group.objects.get(pk=int(id))
+            except:
+                raise ValidationError('One o more groups do not exist.')
+        return super().clean()
 
     def create_pubkey(self):
         if self.pub_key or not self.auths.count():

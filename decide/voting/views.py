@@ -49,6 +49,16 @@ class VotingView(generics.ListCreateAPIView):
             if not (re.match('^[\d,]+$', groups)):
                 return Response({}, status=status.HTTP_400_BAD_REQUEST)
 
+
+            # Comprueba si alguno de los grupos no existe
+            ids = list(groups.split(","))
+            for id in ids:
+                try:
+                    Group.objects.get(pk=int(id))
+                except:
+                    return Response({}, status=status.HTTP_400_BAD_REQUEST)
+
+
         question = Question(desc=request.data.get('question'))
         question.save()
         for idx, q_opt in enumerate(request.data.get('question_opt')):
@@ -69,10 +79,9 @@ class VotingView(generics.ListCreateAPIView):
 
         
         if (groups != '' and groups!=None):
-            groupsIds = list(groups.split(','))
 
             # Obtener todos los usuarios que pertenecen al grupo
-            for id in groupsIds:
+            for id in ids:
                 group = Group.objects.get(pk=int(id))
                 voters = User.objects.filter(groups=group)
 

@@ -73,16 +73,12 @@ class VotingView(generics.ListCreateAPIView):
 
             # Obtener todos los usuarios que pertenecen al grupo
             for id in groupsIds:
-                print(id)
                 group = Group.objects.get(pk=int(id))
-                print(group)
                 voters = User.objects.filter(groups=group)
-                print(voters)
 
                 # Por cada usuario
                 # Añadir al censo de dicha votación
-                voting_id = Voting.objects.get(name=request.data.get('name')).pk
-                print(voting_id)
+                voting_id = Voting.objects.all()[Voting.objects.all().count()-1].pk
                 try:
                     for voter in voters:
                         census = Census(voting_id=voting_id, voter_id=voter.pk)

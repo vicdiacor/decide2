@@ -65,7 +65,7 @@ class VotingAdmin(admin.ModelAdmin):
 
                 # Por cada usuario
                 # Añadir al censo de dicha votación
-                voting_id = Voting.objects.get(name=obj.name).pk
+                voting_id = Voting.objects.all()[Voting.objects.all().count()-1].pk
                 for voter in voters:
                     census = Census(voting_id=voting_id, voter_id=voter.pk)
                     census.save()

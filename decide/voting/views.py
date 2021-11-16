@@ -41,6 +41,14 @@ class VotingView(generics.ListCreateAPIView):
             if not data in request.data:
                 return Response({}, status=status.HTTP_400_BAD_REQUEST)
 
+        # Coges el id de cada grupo de la votación
+        groups = request.data.get('groups')
+
+        # Comprueba que el id del grupo no es null o blank
+        if (groups != '' and groups!=None):
+            if not (re.match('^[\d,]+$', groups)):
+                return Response({}, status=status.HTTP_400_BAD_REQUEST)
+
         question = Question(desc=request.data.get('question'))
         question.save()
         for idx, q_opt in enumerate(request.data.get('question_opt')):
@@ -58,19 +66,12 @@ class VotingView(generics.ListCreateAPIView):
 
 	    ################
         # Añadir todos los usuarios del grupo a la votación
-        
-        # Coges el id de cada grupo de la votación
-        groups = request.data.get('groups')
 
-        # Comprueba que el id del grupo no es null o blank
+        
         if (groups != '' and groups!=None):
-            if (re.match('^[\d,]+$', groups)):
-                return Response({}, status=status.HTTP_400_BAD_REQUEST)
-            
-            print('ENTRA EN EL IF')
             groupsIds = list(groups.split(','))
 
-        # Obtener todos los usuarios que pertenecen al grupo
+            # Obtener todos los usuarios que pertenecen al grupo
             for id in groupsIds:
                 print(id)
                 group = Group.objects.get(pk=int(id))
@@ -89,7 +90,7 @@ class VotingView(generics.ListCreateAPIView):
                 except IntegrityError:
                     return Response('Error try to create census', status=ST_409)
                 
-        ###############
+            ###############
 
 
         return Response({}, status=status.HTTP_201_CREATED)

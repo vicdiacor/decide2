@@ -1,10 +1,14 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.postgres.fields import JSONField
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.core.validators import validate_comma_separated_integer_list
+
 
 from base import mods
 from base.models import Auth, Key
+from django.contrib.auth.models import User, Group
 
 
 class Question(models.Model):
@@ -28,10 +32,14 @@ class QuestionOption(models.Model):
         return '{} ({})'.format(self.option, self.number)
 
 
+
 class Voting(models.Model):
     name = models.CharField(max_length=200)
     desc = models.TextField(blank=True, null=True)
     question = models.ForeignKey(Question, related_name='voting', on_delete=models.CASCADE)
+
+    # Campo groups en votacion
+    groups = models.CharField(validators=[validate_comma_separated_integer_list],max_length=200, blank=True, null=True,default='')
 
     start_date = models.DateTimeField(blank=True, null=True)
     end_date = models.DateTimeField(blank=True, null=True)
@@ -41,6 +49,19 @@ class Voting(models.Model):
 
     tally = JSONField(blank=True, null=True)
     postproc = JSONField(blank=True, null=True)
+
+
+    # Comprueba que los grupos indicados en la votacion existen en base de datos
+    def clean(self) -> None:
+        # Si el grupo es vacío no tengo que comprobar la existencia de los grupos
+        if (self.groups!=None):
+            ids = list(self.groups.split(","))
+            for id in ids:
+                try:
+                    Group.objects.get(pk=int(id))
+                except:
+                    raise ValidationError('One o more groups do not exist.')
+        return super().clean()
 
     def create_pubkey(self):
         if self.pub_key or not self.auths.count():

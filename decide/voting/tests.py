@@ -1,8 +1,10 @@
+from os import name
+import time
 import random
 import itertools
 from django.utils import timezone
 from django.conf import settings
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.test import TestCase
 from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
@@ -16,10 +18,33 @@ from mixnet.models import Auth
 from voting.models import Voting, Question, QuestionOption
 from base.tests import SeleniumBaseTestCase
 import re
+from selenium.webdriver.support.ui import Select
 
 class VotingTestCase(BaseTestCase):
 
     def setUp(self):
+        # Crea un grupo con dos usuarios y otro con un usuario para probar el funcionamiento de los grupos en las votaciones
+        g1 = Group(name='Grupo 1', pk=100)
+        g1.save()
+
+        g2 = Group(name='Grupo 2', pk=101)
+        g2.save()
+
+        u1 = User(username='username1Grupo1', password='password')
+        u1.save()
+        u1.groups.set([g1])
+        u1.save()
+
+        u2 = User(username='username2Grupo1', password='password')
+        u2.save()
+        u2.groups.set([g1])
+        u2.save()
+
+        u3 = User(username='username3Grupo2', password='password')
+        u3.save()
+        u3.groups.set([g2])
+        u3.save()
+
         super().setUp()
 
     def tearDown(self):
@@ -147,7 +172,7 @@ class VotingTestCase(BaseTestCase):
             'name': 'Example',
             'desc': 'Description example',
             'question': 'I want a ',
-            'question_opt': ['cat', 'dog', 'horse']
+            'question_opt': ['cat', 'dog', 'horse'],
         }
 
         response = self.client.post('/voting/', data, format='json')
@@ -246,7 +271,89 @@ class VotingTestCase(BaseTestCase):
         voting = Voting.objects.get(name='vot_test')
         self.assertEqual(voting.desc, 'desc_test')
 
+
+    def test_create_voting_api_with_group(self):
+        self.login()
+
+        #formato incorrecto para groups
+        data = {
+            'name': 'vot_test2',
+            'desc': 'desc_test2',
+            'question': 'quest_test',
+            'question_opt': ['1', '2'],
+            'groups': 'prueba'
+        }
+
+        response = self.client.post('/voting/', data, format='json')
+        self.assertEqual(response.status_code, 400)
+
+        #intento crear votacion con grupo que no existe
+        data = {
+            'name': 'vot_test2',
+            'desc': 'desc_test2',
+            'question': 'quest_test',
+            'question_opt': ['1', '2'],
+            'groups': '145646'
+        }
+
+        response = self.client.post('/voting/', data, format='json')
+        self.assertEqual(response.status_code, 400)
+
+        #formato correcto para groups
+        data = {
+            'name': 'vot_test2',
+            'desc': 'desc_test2',
+            'question': 'quest_test',
+            'question_opt': ['1', '2'],
+            'groups': '100,101'
+        }
+
+        response = self.client.post('/voting/', data, format='json')
+        self.assertEqual(response.status_code, 201)
+
+        voting = Voting.objects.get(name='vot_test2')
+        self.assertEqual(voting.desc, 'desc_test2')
+
+        numUsersInCensus = Census.objects.filter(voting_id=voting.pk).count()
+        self.assertEqual(numUsersInCensus, 3)
+
+        
+
 class SeleniumTestCase(SeleniumBaseTestCase):    
+
+    def setUp(self):
+        a = Auth(name='prueba', url='http://localhost:8000', me=True)
+        a.save()
+
+        q = Question(desc='pregunta de prueba')
+        q.save()
+        opt1 = QuestionOption(question=q, option='opcion 1')
+        opt1.save()
+        opt2 = QuestionOption(question=q, option='opcion 2')
+        opt2.save()
+
+        g1 = Group(name='Grupo 1', pk=100)
+        g1.save()
+
+        g2 = Group(name='Grupo 2', pk=101)
+        g2.save()
+
+        u1 = User(username='username1Grupo1', password='password')
+        u1.save()
+        u1.groups.set([g1])
+        u1.save()
+
+        u2 = User(username='username2Grupo1', password='password')
+        u2.save()
+        u2.groups.set([g1])
+        u2.save()
+
+        u3 = User(username='username3Grupo2', password='password')
+        u3.save()
+        u3.groups.set([g2])
+        u3.save()
+
+        return super().setUp()
 
     def test_create_question(self):
         self.login()
@@ -263,3 +370,76 @@ class SeleniumTestCase(SeleniumBaseTestCase):
         self.driver.find_element_by_link_text('Descripción de prueba').click()
 
         self.assertTrue(re.fullmatch(f'{self.live_server_url}/admin/voting/question/\\d*?/change/', self.driver.current_url))
+
+
+    def test_create_voting_correct(self):
+        self.login()
+        self.driver.find_element_by_link_text('Votings').click()
+        self.driver.find_element_by_class_name('object-tools').click()
+        self.driver.find_element_by_id('id_name').send_keys('Votacion de prueba')
+        self.driver.find_element_by_id('id_desc').send_keys('prueba')
+
+        select = Select(self.driver.find_element_by_id('id_question'))
+        select.select_by_visible_text('pregunta de prueba')
+
+        self.driver.find_element_by_id('id_groups').send_keys('100,101')
+
+        select = Select(self.driver.find_element_by_id('id_auths'))
+        select.select_by_visible_text('http://localhost:8000')
+
+        self.driver.find_element_by_name('_save').click()        
+        
+        # Checks if it is stored in the database
+        self.driver.find_element_by_link_text('Votacion de prueba').click()
+        self.assertTrue(re.fullmatch(f'{self.live_server_url}/admin/voting/voting/\\d*?/change/', self.driver.current_url))
+        
+
+        # Comprueba que hay usuarios en el censo de dicha votacion
+        self.driver.get(f'{self.live_server_url}/admin/census/census/')
+        self.driver.find_element_by_tag_name(name='tr')
+
+        # Compruebo que funciona el update de la votacion
+        self.driver.get(f'{self.live_server_url}/admin/voting/voting/')
+        self.driver.find_element_by_link_text('Votacion de prueba').click()
+        self.driver.find_element_by_id('id_name').send_keys(' modificada')
+        self.driver.find_element_by_id('id_groups').clear()
+        self.driver.find_element_by_name('_save').click() 
+        self.driver.find_element_by_link_text('Votacion de prueba modificada').click()
+        self.assertTrue(re.fullmatch(f'{self.live_server_url}/admin/voting/voting/\\d*?/change/', self.driver.current_url))
+        
+        self.driver.get(f'{self.live_server_url}/admin/census/census/')
+        self.assertEquals(len(self.driver.find_elements_by_tag_name(name='tr')), 0)
+
+
+
+    
+    # Varios casos incorrectos
+    def test_create_voting_incorrect(self):
+        self.login()
+
+        #formato incorrecto para los grupos
+        self.driver.find_element_by_link_text('Votings').click()
+        self.driver.find_element_by_class_name('object-tools').click()
+        self.driver.find_element_by_id('id_name').send_keys('Votacion de prueba')
+        self.driver.find_element_by_id('id_desc').send_keys('prueba')
+
+        select = Select(self.driver.find_element_by_id('id_question'))
+        select.select_by_visible_text('pregunta de prueba')
+
+        self.driver.find_element_by_id('id_groups').send_keys('prueba')
+
+        select = Select(self.driver.find_element_by_id('id_auths'))
+        select.select_by_visible_text('http://localhost:8000')
+
+        self.driver.find_element_by_name('_save').click()        
+        
+        self.driver.find_element_by_class_name('errornote')
+
+        # compruebo con grupo que no existe
+        self.driver.find_element_by_id('id_groups').send_keys('14367')
+        self.driver.find_element_by_name('_save').click()        
+        
+        self.driver.find_element_by_class_name('errornote')
+
+
+

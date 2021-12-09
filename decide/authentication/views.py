@@ -8,10 +8,14 @@ from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
 from django.db import IntegrityError
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.core.exceptions import ObjectDoesNotExist
 
 from .serializers import UserSerializer
+
+from authentication.forms import *
+from authentication.import_and_export import * 
+from django.contrib import messages
 
 
 class GetUserView(APIView):
@@ -53,3 +57,36 @@ class RegisterView(APIView):
         except IntegrityError:
             return Response({}, status=HTTP_400_BAD_REQUEST)
         return Response({'user_pk': user.pk, 'token': token.key}, HTTP_201_CREATED)
+
+
+
+### Importar/Exportar
+
+def importGroup(request):
+    form = importForm()
+
+    if request.method == 'POST':
+        form = importForm(request.POST, request.FILES)
+        if form.is_valid():
+            name = form.cleaned_data['name'] 
+            file = request.FILES['file']
+
+            # Por cada usuario del fichero, indicado por nombre de usuario
+                # Recuperar el usuario, comprobar que existe, añadir a una lista
+            users_list = readTxtFile(file)
+
+            # Si todos los usuarios existen, creo el grupo y añado todos los usuarios de la lista
+            if (users_list != None):
+                b = createGroup(name, users_list)
+                # Si b==False, entonces ya existía un grupo con mismo nombre
+                if (b):
+                    messages.success(request, "Grupo creado correctamente.")
+                else:
+                    messages.error(request, "Ya existe un grupo con el mismo nombre.")
+            else:
+                messages.error(request, "Uno de los usuarios indicados no existe.")
+
+
+    return render(request, 'import_group.html', {'form': form})
+        
+        

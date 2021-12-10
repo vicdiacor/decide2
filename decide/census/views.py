@@ -63,13 +63,13 @@ class GroupUnion(generics.CreateAPIView):
         group_name = request.data.get('group_name')
         group_ids = request.data.get('group_ids')
         group = Group.objects.create(name=group_name)
-        qs = group.user_set.all()
-        for group_id in group_ids:
-            try:
+        try:
+            qs = Group.objects.get(id=group_ids[0]).user_set.all()
+            for group_id in group_ids[1:]:
                 qs = qs.union(Group.objects.get(id=group_id).user_set.all())
-            except ObjectDoesNotExist:
-                group.delete()
-                return Response(f'Group with id {group_id} does not exist, please, try again', status=ST_400)
+        except ObjectDoesNotExist:
+            group.delete()
+            return Response(f'Group with id {group_id} does not exist, please, try again', status=ST_400)
         group.user_set.set(qs)
         return Response(group_successfully_created, status=ST_201)
 
@@ -81,14 +81,14 @@ class GroupIntersection(generics.CreateAPIView):
         group_name = request.data.get('group_name')
         group_ids = request.data.get('group_ids')
         group = Group.objects.create(name=group_name)
-        qs = group.user_set.all()
-        for group_id in group_ids:
-            try:
+        try:
+            qs = Group.objects.get(id=group_ids[0]).user_set.all()
+            for group_id in group_ids[1:]:
                 qs = qs.intersection(Group.objects.get(
                     id=group_id).user_set.all())
-            except ObjectDoesNotExist:
-                group.delete()
-                return Response(f'Group with id {group_id} does not exist, please, try again', status=ST_400)
+        except ObjectDoesNotExist:
+            group.delete()
+            return Response(f'Group with id {group_id} does not exist, please, try again', status=ST_400)
         group.user_set.set(qs)
         return Response(group_successfully_created, status=ST_201)
 
@@ -100,13 +100,13 @@ class GroupDifference(generics.CreateAPIView):
         group_name = request.data.get('group_name')
         group_ids = request.data.get('group_ids')
         group = Group.objects.create(name=group_name)
-        qs = Group.objects.get(id=group_ids[0]).user_set.all()
-        for group_id in group_ids[1:]:
-            try:
+        try:
+            qs = Group.objects.get(id=group_ids[0]).user_set.all()
+            for group_id in group_ids[1:]:
                 qs = qs.difference(Group.objects.get(
                     id=group_id).user_set.all())
-            except ObjectDoesNotExist:
-                group.delete()
-                return Response(f'Group with id {group_id} does not exist, please, try again', status=ST_400)
+        except ObjectDoesNotExist:
+            group.delete()
+            return Response(f'Group with id {group_id} does not exist, please, try again', status=ST_400)
         group.user_set.set(qs)
         return Response(group_successfully_created, status=ST_201)

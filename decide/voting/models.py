@@ -98,6 +98,7 @@ class Voting(models.Model):
     def get_votes(self, token=''):
         # gettings votes from store
         votes = mods.get('store', params={'voting_id': self.id}, HTTP_AUTHORIZATION='Token ' + token)
+        print("VOTOS", votes)
         # anon votes
         return [[i['a'], i['b']] for i in votes]
 
@@ -142,7 +143,7 @@ class Voting(models.Model):
         opts = []
         for opt in options:
             if isinstance(tally, list):
-                votes = tally.count(opt.number)
+                votes = tally.count(opt.number) #Recuento de votos
             else:
                 votes = 0
             opts.append({

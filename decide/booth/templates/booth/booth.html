@@ -27,7 +27,7 @@
 
         <div class="voting">
             <h1>[[ voting.id ]] - [[ voting.name ]]</h1>
-            <h2>Cambio práctica 1</h2>
+            
 
             <!-- Register -->
             <b-form @submit="onSubmitLogin" v-if="signup">
@@ -53,14 +53,30 @@
             <!-- Voting -->
             <div v-if="!signup">
                 <h2>[[ voting.question.desc ]]</h2>
-                <b-form-group v-for="opt in voting.question.options" :key="opt.number">
-                    <b-form-radio v-model="selected"
-                                  :id="'q' + opt.number"
-                                  name="question"
-                                  :value="opt.number">
-                        [[ opt.option ]]
-                    </b-form-radio>
-                </b-form-group>
+                <div v-if="{{questionType}} == 'SO'">
+                    <b-form-group v-for="opt in voting.question.options" :key="opt.number">
+                        <b-form-radio v-model="selected"
+                                    :id="'q' + opt.number"
+                                    name="question"
+                                    :value="opt.number">
+                            [[ opt.option ]]
+                        </b-form-radio>
+                    </b-form-group>
+                </div>
+                <div v-if="{{ questionType }} == 'MC'">
+                  
+                    
+                        <div v-for="opt in voting.question.options" :key="opt.number">
+                          <input type="checkbox" v-model="selected" :id="'q' + opt.number" :value="opt.number" :name="'question' + opt.number" />
+                          [[ opt.option ]]
+                        </div>
+                    
+                      
+                    
+                     
+                        
+
+                </div>
                 <b-button type="button" variant="primary" v-on:click="decideSend">
                     {% trans "Vote" %}
                 </b-button>
@@ -94,7 +110,7 @@
             data: {
                 keybits: {{ KEYBITS }},
                 voting: voting,
-                selected: "",
+                selected: [],
                 signup: true,
                 alertShow: false,
                 alertMsg: "",

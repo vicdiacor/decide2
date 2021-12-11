@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.auth.models import Group
 
 
 
@@ -8,5 +9,6 @@ class importForm(forms.Form):
 
 
 
-#class exportarForm(forms.Form):
+class exportForm(forms.Form):
+    group = forms.ModelChoiceField(label='Selecciona grupo a exportar', queryset=Group.objects.all())
     

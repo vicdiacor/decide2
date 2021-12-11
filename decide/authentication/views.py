@@ -6,7 +6,7 @@ from rest_framework.status import (
 )
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, render
 from django.core.exceptions import ObjectDoesNotExist
@@ -16,6 +16,8 @@ from .serializers import UserSerializer
 from authentication.forms import *
 from authentication.import_and_export import * 
 from django.contrib import messages
+from django.contrib.admin.views.decorators import staff_member_required
+from django.http import HttpResponse
 
 
 class GetUserView(APIView):
@@ -62,6 +64,7 @@ class RegisterView(APIView):
 
 ### Importar/Exportar
 
+@staff_member_required
 def importGroup(request):
     form = importForm()
 
@@ -89,4 +92,33 @@ def importGroup(request):
 
     return render(request, 'import_group.html', {'form': form})
         
+        
+@staff_member_required
+def exportGroup(request):
+    form = exportForm()
+
+    if request.method == 'POST':
+        form = exportForm(request.POST, request.FILES)
+        if form.is_valid():
+            
+            # Borrar contenido del archivo txt
+            open('authentication/exports/export_group.txt', 'w').close()
+
+            with open('authentication/exports/export_group.txt', 'a') as f:    
+            # Añado el nombre de cada miembro por linea
+                group = form.cleaned_data['group']
+                users = User.objects.filter(groups=group)
+
+                for u in users:
+                    f.write(u.username + '\n')
+                
+            # Automáticamente descarga el archivo
+            resp = HttpResponse('')
+            with open('authentication/exports/export_group.txt', 'r') as tmp:
+                resp = HttpResponse(tmp, content_type='application/text;charset=UTF-8')
+                resp['Content-Disposition'] = "attachment; filename=export_group.txt"
+            return resp
+
+    return render(request, 'export_group.html', {'form': form})
+
         

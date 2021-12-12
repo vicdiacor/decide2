@@ -53,6 +53,7 @@
             <!-- Voting -->
             <div v-if="!signup">
                 <h2>[[ voting.question.desc ]]</h2>
+
                 <div v-if="{{questionType}} == 'SO'">
                     <b-form-group v-for="opt in voting.question.options" :key="opt.number">
                         <b-form-radio v-model="selected"
@@ -63,11 +64,11 @@
                         </b-form-radio>
                     </b-form-group>
                 </div>
+
                 <div v-if="{{ questionType }} == 'MC'">
                   
-                    
                         <div v-for="opt in voting.question.options" :key="opt.number">
-                          <input type="checkbox" v-model="selected" :id="'q' + opt.number" :value="opt.number" :name="'question' + opt.number" />
+                          <input type="checkbox" v-model="selectedArray" :id="'q' + opt.number" :value="opt.number" :name="'question' + opt.number" />
                           [[ opt.option ]]
                         </div>
                     
@@ -105,7 +106,8 @@
             data: {
                 keybits: {{ KEYBITS }},
                 voting: voting,
-                selected: [],
+                selected: "",
+                selectedArray:[],
                 signup: true,
                 alertShow: false,
                 alertMsg: "",
@@ -201,12 +203,23 @@
                     evt.preventDefault();
                     optionsEncrypted= [];
 
-                    for (let i = 0; i < this.selected.length; i++) {
-	
-                        var encryptedOption = this.decideEncrypt(this.selected[i]);
+                    
+                    if (this.selected!=""){ // Votación de opción única
+                        
+                        this.selectedArray.push(this.selected)
+                        console.log(this.selectedArray)
+                        
+                    }
+
+                    // Encriptación de cada opción seleccionada
+                    for (let i = 0; i < this.selectedArray.length; i++) {
+                        
+                        var encryptedOption = this.decideEncrypt(this.selectedArray[i]);
                         optionsEncrypted.push(encryptedOption)
 
                     }
+
+                    // Guardamos los atributos alpha y beta de cada voto encriptado 
                     votes=[];
                     for (let i = 0; i < optionsEncrypted.length; i++) {
 	

@@ -18,8 +18,6 @@ class BoothView(TemplateView):
         try:
             r = mods.get('voting', params={'id': vid})
             questionType= Voting.objects.get(pk=vid).question.type
-            print(questionType)
-
             
             # Casting numbers to string to manage in javascript with BigInt
             # and avoid problems with js and big number conversion

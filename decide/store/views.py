@@ -26,7 +26,7 @@ class StoreView(generics.ListAPIView):
         """
          * voting: id
          * voter: id
-         * vote: { "a": int, "b": int }
+         * votes: [ { "a": int, "b": int } , { "a": int, "b": int } ]
         """
 
         vid = request.data.get('voting')

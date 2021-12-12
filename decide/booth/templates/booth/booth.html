@@ -71,11 +71,6 @@
                           [[ opt.option ]]
                         </div>
                     
-                      
-                    
-                     
-                        
-
                 </div>
                 <b-button type="button" variant="primary" v-on:click="decideSend">
                     {% trans "Vote" %}
@@ -196,16 +191,32 @@
                     document.cookie = 'decide=;';
                     this.signup = true;
                 },
-                decideEncrypt() {
-                    var bigmsg = BigInt.fromJSONObject(this.selected.toString());
+                decideEncrypt(value) {
+                    var bigmsg = BigInt.fromJSONObject(value.toString());
                     var cipher = ElGamal.encrypt(this.bigpk, bigmsg);
+                    
                     return cipher;
                 },
                 decideSend(evt) {
                     evt.preventDefault();
-                    var v = this.decideEncrypt();
+                    optionsEncrypted= [];
+
+                    for (let i = 0; i < this.selected.length; i++) {
+	
+                        var encryptedOption = this.decideEncrypt(this.selected[i]);
+                        optionsEncrypted.push(encryptedOption)
+
+                    }
+                    votes=[];
+                    for (let i = 0; i < optionsEncrypted.length; i++) {
+	
+                        let vote = {a:optionsEncrypted[i].alpha.toString(), b:optionsEncrypted[i].beta.toString()};
+                        votes.push(vote)
+                    
+                    }
+                    
                     var data = {
-                        vote: {a: v.alpha.toString(), b: v.beta.toString()},
+                        votes: votes,
                         voting: this.voting.id,
                         voter: this.user.id,
                         token: this.token

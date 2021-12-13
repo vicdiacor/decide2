@@ -1,6 +1,7 @@
+import logging as log
 from django.db.utils import IntegrityError
 from django.core.exceptions import ObjectDoesNotExist
-from rest_framework import generics
+from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework.status import (
     HTTP_201_CREATED as ST_201,
@@ -57,56 +58,68 @@ class CensusDetail(generics.RetrieveDestroyAPIView):
 
 
 class GroupUnion(generics.CreateAPIView):
-    permission_classes = (UserIsStaff,)
+    permissions_classes = (permissions.IsAuthenticated,)
 
     def create(self, request, *args, **kwargs):
-        group_name = request.data.get('group_name')
-        group_ids = request.data.get('group_ids')
-        group = Group.objects.create(name=group_name)
+        groups = request.data.get('groups')
+        for group in groups:
+            if request.user not in Group.objects.get(name=group).user_set.all():
+                return Response('User must be in all groups to perform this action', status=ST_401)
+
+        group_name = request.data.get('name')
+        new_group = Group.objects.create(name=group_name)
         try:
-            qs = Group.objects.get(id=group_ids[0]).user_set.all()
-            for group_id in group_ids[1:]:
-                qs = qs.union(Group.objects.get(id=group_id).user_set.all())
+            qs = Group.objects.get(name=groups[0]).user_set.all()
+            for group in groups[1:]:
+                qs = qs.union(Group.objects.get(name=group).user_set.all())
         except ObjectDoesNotExist:
-            group.delete()
-            return Response(f'Group with id {group_id} does not exist, please, try again', status=ST_400)
-        group.user_set.set(qs)
+            new_group.delete()
+            return Response(f'Please, try again', status=ST_400)
+        new_group.user_set.set(qs)
         return Response(group_successfully_created, status=ST_201)
 
 
 class GroupIntersection(generics.CreateAPIView):
-    permission_classes = (UserIsStaff,)
+    permissions_classes = (permissions.IsAuthenticated,)
 
     def create(self, request, *args, **kwargs):
-        group_name = request.data.get('group_name')
-        group_ids = request.data.get('group_ids')
-        group = Group.objects.create(name=group_name)
+        groups = request.data.get('groups')
+        for group in groups:
+            if request.user not in Group.objects.get(name=group).user_set.all():
+                return Response('User must be in all groups to perform this action', status=ST_401)
+
+        group_name = request.data.get('name')
+        new_group = Group.objects.create(name=group_name)
         try:
-            qs = Group.objects.get(id=group_ids[0]).user_set.all()
-            for group_id in group_ids[1:]:
+            qs = Group.objects.get(name=groups[0]).user_set.all()
+            for group in groups[1:]:
                 qs = qs.intersection(Group.objects.get(
-                    id=group_id).user_set.all())
+                    name=group).user_set.all())
         except ObjectDoesNotExist:
-            group.delete()
-            return Response(f'Group with id {group_id} does not exist, please, try again', status=ST_400)
-        group.user_set.set(qs)
+            new_group.delete()
+            return Response(f'Please, try again', status=ST_400)
+        new_group.user_set.set(qs)
         return Response(group_successfully_created, status=ST_201)
 
 
 class GroupDifference(generics.CreateAPIView):
-    permission_classes = (UserIsStaff,)
+    permissions_classes = (permissions.IsAuthenticated,)
 
     def create(self, request, *args, **kwargs):
-        group_name = request.data.get('group_name')
-        group_ids = request.data.get('group_ids')
-        group = Group.objects.create(name=group_name)
+        groups = request.data.get('groups')
+        for group in groups:
+            if request.user not in Group.objects.get(name=group).user_set.all():
+                return Response('User must be in all groups to perform this action', status=ST_401)
+
+        group_name = request.data.get('name')
+        new_group = Group.objects.create(name=group_name)
         try:
-            qs = Group.objects.get(id=group_ids[0]).user_set.all()
-            for group_id in group_ids[1:]:
+            qs = Group.objects.get(name=groups[0]).user_set.all()
+            for group in groups[1:]:
                 qs = qs.difference(Group.objects.get(
-                    id=group_id).user_set.all())
+                    name=group).user_set.all())
         except ObjectDoesNotExist:
-            group.delete()
-            return Response(f'Group with id {group_id} does not exist, please, try again', status=ST_400)
-        group.user_set.set(qs)
+            new_group.delete()
+            return Response(f'Please, try again', status=ST_400)
+        new_group.user_set.set(qs)
         return Response(group_successfully_created, status=ST_201)

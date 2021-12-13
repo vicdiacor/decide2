@@ -6,7 +6,7 @@ from rest_framework.status import (
 )
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, render
 from django.core.exceptions import ObjectDoesNotExist
@@ -18,6 +18,10 @@ from authentication.import_and_export import *
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponse
+
+import os
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 
 
 class GetUserView(APIView):
@@ -64,6 +68,11 @@ class RegisterView(APIView):
 
 ### Importar/Exportar
 
+
+FILE_PATH = 'authentication/files/'
+FORMATS = {'excel':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'txt': 'text/plain'}
+
+
 @staff_member_required
 def importGroup(request):
     form = importForm()
@@ -73,10 +82,20 @@ def importGroup(request):
         if form.is_valid():
             name = form.cleaned_data['name'] 
             file = request.FILES['file']
+            format = file.content_type
 
-            # Por cada usuario del fichero, indicado por nombre de usuario
-                # Recuperar el usuario, comprobar que existe, añadir a una lista
-            users_list = readTxtFile(file)
+            users_list = []
+            # Si file es excel, guardo el archivo para abrirlo después
+            if (format == FORMATS['excel']):
+                path = default_storage.save(FILE_PATH + 'temp_import.xlsx', ContentFile(file.read()))
+                users_list = readExcelFile(path)
+                os.remove(os.path.join(path))   # Borro el archivo tras su uso
+            # Si file es txt, no necesito guardar el fichero
+            elif (format == FORMATS['txt']):
+                users_list = readTxtFile(file)
+            else:
+                messages.error(request, "Formato de archivo no válido.")
+                return render(request, 'import_group.html', {'form': form})
 
             # Si todos los usuarios existen, creo el grupo y añado todos los usuarios de la lista
             if (users_list != None):
@@ -89,10 +108,10 @@ def importGroup(request):
             else:
                 messages.error(request, "Uno de los usuarios indicados no existe.")
 
-
     return render(request, 'import_group.html', {'form': form})
         
-        
+
+
 @staff_member_required
 def exportGroup(request):
     form = exportForm()
@@ -100,25 +119,19 @@ def exportGroup(request):
     if request.method == 'POST':
         form = exportForm(request.POST, request.FILES)
         if form.is_valid():
+            group = form.cleaned_data['group']
+            users = User.objects.filter(groups=group)
             
-            # Borrar contenido del archivo txt
-            open('authentication/exports/export_group.txt', 'w').close()
-
-            with open('authentication/exports/export_group.txt', 'a') as f:    
-            # Añado el nombre de cada miembro por linea
-                group = form.cleaned_data['group']
-                users = User.objects.filter(groups=group)
-
-                for u in users:
-                    f.write(u.username + '\n')
+            # Crea el Excel con los usuarios exportados
+            writeInExcelUsernames(users, FILE_PATH + 'temp_export.xlsx', 'temp_export.xlsx')
                 
+            # Abrir el Excel generado
+            with open(FILE_PATH + 'temp_export.xlsx', 'rb') as excel:
+                data = excel.read()
+
             # Automáticamente descarga el archivo
-            resp = HttpResponse('')
-            with open('authentication/exports/export_group.txt', 'r') as tmp:
-                resp = HttpResponse(tmp, content_type='application/text;charset=UTF-8')
-                resp['Content-Disposition'] = "attachment; filename=export_group.txt"
+            resp = HttpResponse(data, content_type=FORMATS['excel'])
+            resp['Content-Disposition'] = 'attachment; filename=export_group.xlsx'
             return resp
 
     return render(request, 'export_group.html', {'form': form})
-
-        

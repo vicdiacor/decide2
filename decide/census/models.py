@@ -12,4 +12,8 @@ class Census(models.Model):
 class ParentGroup(Group):
     isPublic = models.BooleanField(default=False)
 
+
+class Request(models.Model):
+    voter_id = models.PositiveIntegerField()
+    group_id = models.PositiveIntegerField()
     

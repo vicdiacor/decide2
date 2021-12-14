@@ -1,0 +1,41 @@
+{% load static %} 
+
+<!DOCTYPE html>
+<html lang='es'>
+  <head>
+    <title>Sistema de votación DECIDE</title>
+	<meta charset='utf-8'>
+		<link rel="stylesheet" href="{{STATIC_URL}}css/uikit.min.css" />
+        <script src="{{STATIC_URL}}js/jquery.min.js"></script>
+        <script src="{{STATIC_URL}}js/uikit.min.js"></script>
+  </head>
+  <body>
+  
+
+	<h1>Sistema de votación DECIDE</h1>
+    <nav class="uk-navbar-container" uk-navbar>
+    <div class="uk-navbar-left">
+
+        <ul class="uk-navbar-nav">
+            <li class="uk-active"><a href="">Inicio</a>
+
+            </li>
+
+        {% if user.is_authenticated %}
+            <li><a href="/authentication/cerrar_sesion">Cerrar sesión</a></li>
+        {%else %}
+            <li><a href="/authentication/register">Regístrate</a></li>
+            <li><a href="/authentication/iniciar_sesion">Iniciar sesión</a></li>
+        {% endif %}
+        </ul>
+
+    </div>
+</nav>
+	    
+		<hr>
+ 		
+ 		<h1 >{% block titulo %} {% endblock %}</h1>
+
+		{% block contenido %} {% endblock %}
+  </body>
+</html>

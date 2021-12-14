@@ -4,9 +4,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 
 
 def autoclose_votings():
-    print('autoclose_votings')
     for voting in Voting.objects.filter(deadline__lte=date.today(), end_date=None):
-        print('Closing voting {}'.format(voting.name))
         voting.end_date = datetime.now()
         voting.save()
 

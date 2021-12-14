@@ -109,11 +109,44 @@ class GroupOperationsTestCases(BaseTestCase):
         group2 = Group.objects.create(name='group2')
         group2.user_set.set([user1, user2, user4])
 
+        group3 = Group.objects.create(name='group3')
+
         self.groups = [group1, group2]
         self.users = [user1, user2, user3, user4]
 
     def tearDown(self):
         super().tearDown()
+
+    def test_group_operation_wrong_parameters(self):
+        data = {'name': '', 'groups': ['group1', 'group2']}
+
+        self.login(user='user1', password='user1')
+        response = self.client.post('/census/union', data, format='json')
+        self.assertEqual(response.status_code, 400)
+
+        data = {'name': 'group1', 'groups': ['group1', 'group2']}
+
+        self.login(user='user1', password='user1')
+        response = self.client.post('/census/union', data, format='json')
+        self.assertEqual(response.status_code, 409)
+
+        data = {'name': 'test', 'groups': ['group1']}
+
+        self.login(user='user1', password='user1')
+        response = self.client.post('/census/union', data, format='json')
+        self.assertEqual(response.status_code, 400)
+
+        data = {'name': 'test', 'groups': ['group1', 'group2', 'group3']}
+
+        self.login(user='user1', password='user1')
+        response = self.client.post('/census/union', data, format='json')
+        self.assertEqual(response.status_code, 401)
+
+        data = {'name': 'test', 'groups': ['group1', 'group2', 'notExists']}
+
+        self.login(user='user1', password='user1')
+        response = self.client.post('/census/union', data, format='json')
+        self.assertEqual(response.status_code, 400)
 
     def test_group_union(self):
         data = {'name': 'union', 'groups': ['group1', 'group2']}

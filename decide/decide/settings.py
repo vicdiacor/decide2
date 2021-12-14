@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'scheduler.apps.SchedulerConfig',
 
     'corsheaders',
     'django_filters',
@@ -68,6 +69,7 @@ MODULES = [
     'store',
     'visualizer',
     'voting',
+    'scheduler',
 ]
 
 BASEURL = 'http://localhost:8000'

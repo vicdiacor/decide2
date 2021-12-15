@@ -73,7 +73,6 @@ FILE_PATH = 'authentication/files/'
 FORMATS = {'excel':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'txt': 'text/plain'}
 
 
-@staff_member_required
 def importGroup(request):
     form = importForm()
 
@@ -112,7 +111,6 @@ def importGroup(request):
         
 
 
-@staff_member_required
 def exportGroup(request):
     form = exportForm()
 

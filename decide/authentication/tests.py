@@ -195,7 +195,6 @@ class SeleniumTestCase(SeleniumBaseTestCase):
 
 
     def test_import_group(self):
-        self.login()
         self.driver.get(f"{self.live_server_url}/authentication/groups/import/")
         self.driver.find_element_by_id('id_name').send_keys('Grupo 2')
         self.driver.find_element_by_id('id_file').send_keys(os.getcwd() + "/authentication/files/testfiles/testgroup1.txt")
@@ -210,13 +209,13 @@ class SeleniumTestCase(SeleniumBaseTestCase):
         self.driver.find_element_by_class_name('success')
 
         # Comprueba que existen 3 grupos (setUp + 2 grupos creados)
+        self.login()
         self.driver.get(f"{self.live_server_url}/admin/auth/group/")
         self.assertEquals(len(self.driver.find_elements_by_class_name(name='field-__str__')), 3)
 
 
-    # Prueba si se introuduce un nombre de grupo ya existente
+    # Prueba si se introduce un nombre de grupo ya existente
     def test_import_wrong_group_name(self):
-        self.login()
         self.driver.get(f"{self.live_server_url}/authentication/groups/import/")
         self.driver.find_element_by_id('id_name').send_keys('Grupo 1')
         self.driver.find_element_by_id('id_file').send_keys(os.getcwd() + "/authentication/files/testfiles/testgroup1.txt")
@@ -228,7 +227,6 @@ class SeleniumTestCase(SeleniumBaseTestCase):
 
     # Prueba si se introduce un fichero con un username que no existe
     def test_import_wrong_username(self):
-        self.login()
         self.driver.get(f"{self.live_server_url}/authentication/groups/import/")
         self.driver.find_element_by_id('id_name').send_keys('Grupo 2')
         self.driver.find_element_by_id('id_file').send_keys(os.getcwd() + "/authentication/files/testfiles/testgroup2.txt")
@@ -240,7 +238,6 @@ class SeleniumTestCase(SeleniumBaseTestCase):
 
 
     def test_export_group(self):
-        self.login()
         self.driver.get(f"{self.live_server_url}/authentication/groups/export/")
         select = Select(self.driver.find_element_by_id('id_group'))
         select.select_by_visible_text('Grupo 1')

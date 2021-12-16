@@ -60,7 +60,7 @@ class CensusDetail(generics.RetrieveDestroyAPIView):
 class GroupOperations():
 
     def check(self, user, group_name, groups):
-        if not group_name or not isinstance(group_name, str):
+        if not group_name or not isinstance(group_name, str) or group_name.isspace():
             return Response('Group name is required', status=ST_400)
         if Group.objects.filter(name=group_name).exists():
             return Response('Group already exists, please, try another name', status=ST_409)

@@ -1,4 +1,5 @@
 import django_heroku
+import dj_database_url
 ALLOWED_HOSTS = ["*"]
 
 # Modules in use, commented modules that you won't use
@@ -27,6 +28,10 @@ APIS = {
 }
 
 BASEURL =  'https://egc-part-chullo-decide.herokuapp.com/'
+
+DATABASES = dict()
+
+DATABASES['default'] =  dj_database_url.config()
 
 # number of bits for the key, all auths should use the same number of bits
 KEYBITS = 256

@@ -60,18 +60,20 @@ class CensusDetail(generics.RetrieveDestroyAPIView):
 class GroupOperations():
 
     def check(self, user, group_name, groups):
-        if not group_name or not isinstance(group_name, str) or group_name.isspace():
+        if not isinstance(group_name, str) or group_name.isspace():
             return Response('Group name is required', status=ST_400)
+        group_name = group_name.strip()
         if Group.objects.filter(name=group_name).exists():
-            return Response('Group already exists, please, try another name', status=ST_409)
-        if not groups or not isinstance(groups, list) or len(groups) < 2:
+            return Response(f'Group with name \'{group_name}\' already exists, please, try another name', status=ST_409)
+        if not groups or not isinstance(groups, list) or any(not isinstance(group, str) for group in groups) or len(groups) < 2:
             return Response('Two groups are required at least', status=ST_400)
-        try:
-            for group in groups:
+
+        for group in groups:
+            try:
                 if user not in Group.objects.get(name=group).user_set.all():
                     return Response('User must be in all groups to perform this action', status=ST_401)
-        except ObjectDoesNotExist:
-            return Response('One of the groups does not exist, please, try again', status=ST_400)
+            except ObjectDoesNotExist:
+                return Response(f'There is no group with name \'{group}\', please, try again', status=ST_400)
 
     class GroupUnion(generics.CreateAPIView):
         permissions_classes = (permissions.IsAuthenticated,)
@@ -87,7 +89,7 @@ class GroupOperations():
             if response:
                 return response
 
-            new_group = Group.objects.create(name=group_name)
+            new_group = Group.objects.create(name=group_name.strip())
             qs = Group.objects.get(name=groups[0]).user_set.all()
             for group in groups[1:]:
                 qs = qs.union(Group.objects.get(

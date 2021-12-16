@@ -28,17 +28,6 @@ APIS = {
 
 BASEURL =  'https://egc-part-chullo-decide.herokuapp.com/'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'decidedb',
-        'USER': 'decide1',
-        'HOST': 'localhost',
-        'PASSWORD': 'decide1',
-        'PORT': '5432',
-    }
-}
-
 # number of bits for the key, all auths should use the same number of bits
 KEYBITS = 256
 

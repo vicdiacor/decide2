@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 """
 
 import os
+import django_heroku
+import dj_database_url
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -168,6 +170,24 @@ DEFAULT_VERSION = 'v1'
 try:
     from local_settings import *
 except ImportError:
+    APIS = {
+    'authentication': 'https://egc-part-chullo-decide.herokuapp.com/',
+    'base': 'https://egc-part-chullo-decide.herokuapp.com/',
+    'booth': 'https://egc-part-chullo-decide.herokuapp.com/',
+    'census': 'https://egc-part-chullo-decide.herokuapp.com/',
+    'mixnet': 'https://egc-part-chullo-decide.herokuapp.com/',
+    'postproc': 'https://egc-part-chullo-decide.herokuapp.com/',
+    'store': 'https://egc-part-chullo-decide.herokuapp.com/',
+    'visualizer': 'https://egc-part-chullo-decide.herokuapp.com/',
+    'voting': 'https://egc-part-chullo-decide.herokuapp.com/',
+    }
+
+    BASEURL =  'https://egc-part-chullo-decide.herokuapp.com/'
+
+    DATABASES = dict()
+
+    DATABASES['default'] =  dj_database_url.config()
+    django_heroku.settings(locals())
     print("local_settings.py not found")
 
 # loading jsonnet config

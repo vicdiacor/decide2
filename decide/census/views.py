@@ -60,7 +60,7 @@ class CensusDetail(generics.RetrieveDestroyAPIView):
 class GroupOperations():
 
     def check(self, user, group_name, groups):
-        if not isinstance(group_name, str) or group_name.isspace():
+        if not group_name or not isinstance(group_name, str) or group_name.isspace():
             return Response('Group name is required', status=ST_400)
         group_name = group_name.strip()
         if Group.objects.filter(name=group_name).exists():

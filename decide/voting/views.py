@@ -111,7 +111,7 @@ class VotingUpdate(generics.RetrieveUpdateDestroyAPIView):
         action = request.data.get('action')
         if not action:
             return Response({}, status=status.HTTP_400_BAD_REQUEST)
-
+        
         voting = get_object_or_404(Voting, pk=voting_id)
         msg = ''
         st = status.HTTP_200_OK

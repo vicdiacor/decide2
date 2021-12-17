@@ -10,6 +10,8 @@ from django.core.validators import validate_comma_separated_integer_list
 from base import mods
 from base.models import Auth, Key
 from django.contrib.auth.models import User, Group
+from store.models import Vote
+
 
 
 class Question(models.Model):
@@ -38,7 +40,6 @@ class QuestionOption(models.Model):
     question = models.ForeignKey(Question, related_name='options', on_delete=models.CASCADE)
     number = models.PositiveIntegerField(blank=True, null=True)
     option = models.TextField()
-    points= models.FloatField(blank=True, null=True, default= 1)
 
     def save(self):
         if not self.number:
@@ -95,19 +96,18 @@ class Voting(models.Model):
         self.pub_key = pk
         self.save()
 
-    def get_votes(self, token=''):
+    def get_votes(self):
         # gettings votes from store
-        votes = mods.get('store', params={'voting_id': self.id}, HTTP_AUTHORIZATION='Token ' + token)
-        print("VOTOS", votes)
+        votes = Vote.objects.filter(voting_id= self.id)
         # anon votes
-        return [[i['a'], i['b']] for i in votes]
+        return [[i.a, i.b] for i in votes]
 
     def tally_votes(self, token=''):
         '''
         The tally is a shuffle and then a decrypt
         '''
 
-        votes = self.get_votes(token)
+        votes = self.get_votes()
 
         auth = self.auths.first()
         shuffle_url = "/shuffle/{}/".format(self.id)

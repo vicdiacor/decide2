@@ -1,9 +1,10 @@
 import random
-from django.contrib.auth.models import User, Group
-from django.test import TestCase
+from django.contrib.auth.models import User, UserManager, Group
+from django.test import TestCase, Client
+
 from rest_framework.test import APIClient
 
-from .models import Census
+from .models import Census, ParentGroup
 from base import mods
 from base.tests import BaseTestCase
 import logging as log
@@ -81,6 +82,37 @@ class CensusTestCase(BaseTestCase):
         self.assertEqual(response.status_code, 204)
         self.assertEqual(0, Census.objects.count())
 
+class ParentGroupTestCase(BaseTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.group = ParentGroup(name='test_group', isPublic=True)
+        self.group.save()
+
+
+    def tearDown(self):
+        super().tearDown()
+        self.group = None
+
+    def test_list_groups(self):
+        response = self.client.get('/admin/census/parentgroup/')
+        self.assertEqual(response.status_code, 302)
+
+    def test_create_group(self):
+        
+        self.login()
+        data = {'name': 'test_group', 'isPublic': True}
+        response = self.client.post('/admin/census/parentgroup/add/', data)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual('test_group', ParentGroup.objects.get(name='test_group').name)
+    
+    '''def test_delete_group(self):
+       
+        self.login()
+        response = self.client.post('/admin/census/parentgroup/{}/delete/'.format(self.group.id))
+        print(response)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(0, ParentGroup.objects.count())'''
 
 class GroupOperationsTestCases(BaseTestCase):
 
@@ -189,3 +221,4 @@ class GroupOperationsTestCases(BaseTestCase):
 
         difference = Group.objects.get(name='difference')
         self.assertEquals(len(difference.user_set.all()), 1)
+

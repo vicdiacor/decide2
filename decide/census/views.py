@@ -12,8 +12,7 @@ from rest_framework.status import (
 )
 
 from base.perms import UserIsStaff
-from .models import Census
-from django.contrib.auth.models import Group
+from .models import Census, ParentGroup
 
 group_successfully_created = "Group successfully created"
 
@@ -59,18 +58,23 @@ class CensusDetail(generics.RetrieveDestroyAPIView):
 
 class GroupOperations():
 
-    def check(self, user, group_name, groups):
+    def check(self, user, group_name, groups, is_public):
         if not group_name or not isinstance(group_name, str) or group_name.isspace():
             return Response('Group name is required', status=ST_400)
+
         group_name = group_name.strip()
-        if Group.objects.filter(name=group_name).exists():
+        if ParentGroup.objects.filter(name=group_name).exists():
             return Response(f'Group with name \'{group_name}\' already exists, please, try another name', status=ST_409)
+
         if not groups or not isinstance(groups, list) or any(not isinstance(group, str) for group in groups) or len(groups) < 2:
             return Response('Two groups are required at least', status=ST_400)
 
+        if not isinstance(is_public, bool):
+            return Response('If you wish the group to be private you must set \'is public\' attribute to false, otherwise set it to true', status=ST_400)
+
         for group in groups:
             try:
-                if user not in Group.objects.get(name=group).user_set.all():
+                if user not in ParentGroup.objects.get(name=group).user_set.all():
                     return Response('User must be in all groups to perform this action', status=ST_401)
             except ObjectDoesNotExist:
                 return Response(f'There is no group with name \'{group}\', please, try again', status=ST_400)
@@ -81,18 +85,22 @@ class GroupOperations():
         def create(self, request, *args, **kwargs):
             group_name = request.data.get('name')
             groups = request.data.get('groups')
+            is_public = request.data.get('is_public')
+            log.info(
+                f'{request.user} is trying to create group with name {group_name} and groups {groups} and is_public {is_public}')
             user = request.user
 
             checks = GroupOperations()
             response = checks.check(
-                user=user, group_name=group_name, groups=groups)
+                user=user, group_name=group_name, groups=groups, is_public=is_public)
             if response:
                 return response
 
-            new_group = Group.objects.create(name=group_name.strip())
-            qs = Group.objects.get(name=groups[0]).user_set.all()
+            new_group = ParentGroup.objects.create(
+                name=group_name.strip(), isPublic=is_public)
+            qs = ParentGroup.objects.get(name=groups[0]).user_set.all()
             for group in groups[1:]:
-                qs = qs.union(Group.objects.get(
+                qs = qs.union(ParentGroup.objects.get(
                     name=group).user_set.all())
 
             new_group.user_set.set(qs)
@@ -104,18 +112,20 @@ class GroupOperations():
         def create(self, request, *args, **kwargs):
             group_name = request.data.get('name')
             groups = request.data.get('groups')
+            is_public = request.data.get('is_public')
             user = request.user
 
             checks = GroupOperations()
             response = checks.check(
-                user=user, group_name=group_name, groups=groups)
+                user=user, group_name=group_name, groups=groups, is_public=is_public)
             if response:
                 return response
 
-            new_group = Group.objects.create(name=group_name)
-            qs = Group.objects.get(name=groups[0]).user_set.all()
+            new_group = ParentGroup.objects.create(
+                name=group_name, isPublic=is_public)
+            qs = ParentGroup.objects.get(name=groups[0]).user_set.all()
             for group in groups[1:]:
-                qs = qs.intersection(Group.objects.get(
+                qs = qs.intersection(ParentGroup.objects.get(
                     name=group).user_set.all())
 
             new_group.user_set.set(qs)
@@ -127,18 +137,20 @@ class GroupOperations():
         def create(self, request, *args, **kwargs):
             group_name = request.data.get('name')
             groups = request.data.get('groups')
+            is_public = request.data.get('is_public')
             user = request.user
 
             checks = GroupOperations()
             response = checks.check(
-                user=user, group_name=group_name, groups=groups)
+                user=user, group_name=group_name, groups=groups, is_public=is_public)
             if response:
                 return response
 
-            new_group = Group.objects.create(name=group_name)
-            qs = Group.objects.get(name=groups[0]).user_set.all()
+            new_group = ParentGroup.objects.create(
+                name=group_name, isPublic=is_public)
+            qs = ParentGroup.objects.get(name=groups[0]).user_set.all()
             for group in groups[1:]:
-                qs = qs.difference(Group.objects.get(
+                qs = qs.difference(ParentGroup.objects.get(
                     name=group).user_set.all())
 
             new_group.user_set.set(qs)

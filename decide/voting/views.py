@@ -67,7 +67,6 @@ class VotingView(generics.ListCreateAPIView):
         voting = Voting(name=request.data.get('name'), desc=request.data.get('desc'),
                 question=question)
         voting.save()
-
         auth, _ = Auth.objects.get_or_create(url=settings.BASEURL,
                                           defaults={'me': True, 'name': 'test auth'})
         auth.save()
@@ -78,6 +77,7 @@ class VotingView(generics.ListCreateAPIView):
         # Añadir todos los usuarios del grupo a la votación
 
         
+        voting_id = voting.pk
         if (groups != '' and groups!=None):
 
             # Obtener todos los usuarios que pertenecen al grupo
@@ -87,7 +87,6 @@ class VotingView(generics.ListCreateAPIView):
 
                 # Por cada usuario
                 # Añadir al censo de dicha votación
-                voting_id = Voting.objects.all()[Voting.objects.all().count()-1].pk
                 try:
                     for voter in voters:
                         census = Census(voting_id=voting_id, voter_id=voter.pk)
@@ -98,7 +97,7 @@ class VotingView(generics.ListCreateAPIView):
             ###############
 
 
-        return Response({}, status=status.HTTP_201_CREATED)
+        return Response(data={'id': voting_id}, status=status.HTTP_201_CREATED)
 
 
 class VotingUpdate(generics.RetrieveUpdateDestroyAPIView):

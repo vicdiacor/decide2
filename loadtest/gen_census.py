@@ -1,9 +1,14 @@
 import json
 import requests
-import os
+from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
+import random
 
 
-HOST = "http://localhost:8000"
+HOST = "http://127.0.0.1:8000"
 USER = "decide1"
 PASS = "decide1234"
 
@@ -68,25 +73,34 @@ def create_voting() -> int:
 
 def vote(filename):
     voters, invalids = create_voters(filename)
-    if len(invalids) > 0:
-        raise Exception('Borra los usuarios existentes antes de empezar')
-
     voting_id = create_voting()
 
-    add_census(voters, voting_id)
-    
+    if len(invalids) == 0:
+        add_census(voters, voting_id)
+
+    with open(filename) as f:
+        voters = json.loads(f.read())
+
     print('Votaciones: ')
-    for voter in voters:
-        id_, username, pwd = voter['id'], voter['username'], voter['pass']
-        token = login(username, pwd)
-        auth = {'Authorization': 'Token ' + token.get('token')}
-        data = {
-                "voting": voting_id,
-                "voter": id_,
-                "vote": {'Gato': 0, 'Perro': 0, 'Hamster': 1, 'Conejo': 0, 'Carpincho': 0, 'Jirafa': 0}
-            }
-        response = requests.post(HOST + '/store/', json=data, headers=auth)
-        print(response.status_code)
+    options = webdriver.ChromeOptions()
+    options.headless = True
+    driver = webdriver.Chrome(options=options)
+    for username, password in voters.items():
+        print(f'{username} está votando...')
+        token = login(username, password)
+        id_ = json.loads(requests.post(f'{HOST}/authentication/getuser/', json=token).text)['id']
+        v = dict()
+        v['id'] = id_
+        add_census([v], voting_id)
+        
+        driver.get(f'{HOST}/booth/{voting_id}')
+        driver.find_element_by_id('username').send_keys(username)
+        driver.find_element_by_id('password').send_keys(password)
+        driver.find_element_by_xpath('//*[@id="app-booth"]/div/form/button').click()
+        i = random.randint(1,5)
+        WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.XPATH, f'//*[@id="q{i}"]'))).click()
+        driver.find_element_by_xpath('//*[@id="app-booth"]/div/div/button').click()
+        driver.find_element_by_xpath('//*[@id="app-booth"]/nav/ul/li/a').click()
     
     token = login()
     auth = {'Authorization': 'Token ' + token.get('token')}

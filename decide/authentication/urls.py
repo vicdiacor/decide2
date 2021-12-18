@@ -5,7 +5,7 @@ from authentication.views import registro, cerrar_sesion, iniciar_sesion, GetUse
 
 urlpatterns = [
 
-    path('register/', registro),
+    path('registrarse/', registro),
     path('cerrar_sesion/', cerrar_sesion),
     path('iniciar_sesion/', iniciar_sesion),
     path('login/', obtain_auth_token),

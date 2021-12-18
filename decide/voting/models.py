@@ -47,7 +47,7 @@ class QuestionOption(models.Model):
         return super().save()
 
     def __str__(self):
-        return '{} ({}) {} points'.format(self.option, self.number, self.points)
+        return '{} ({})'.format(self.option, self.number)
 
 
 
@@ -99,6 +99,8 @@ class Voting(models.Model):
     def get_votes(self):
         # gettings votes from store
         votes = Vote.objects.filter(voting_id= self.id)
+        for borrar in votes:
+            print("Voto obtenido dentro de get_votes:" , borrar)
         # anon votes
         return [[i.a, i.b] for i in votes]
 
@@ -132,6 +134,7 @@ class Voting(models.Model):
             pass
 
         self.tally = response.json()
+        print("TALLY: " , self.tally)
         self.save()
 
         self.do_postproc()

@@ -58,7 +58,7 @@ class VotingTestCase(BaseTestCase):
         return k.encrypt(msg)
 
     def create_voting(self):
-        q = Question(desc='test question')
+        q = Question(desc='test question',type='SO')
         q.save()
         for i in range(5):
             opt = QuestionOption(question=q, option='option {}'.format(i+1))
@@ -74,7 +74,7 @@ class VotingTestCase(BaseTestCase):
         return v
     
     def create_voting_one_question_two_options(self):
-        q = Question(desc='test question')
+        q = Question(desc='test question',type='SO')
         q.save()
         opt1 = QuestionOption(question=q, option='option 1')
         opt1.save()
@@ -117,11 +117,11 @@ class VotingTestCase(BaseTestCase):
         for opt in v.question.options.all():
             clear[opt.number] = 0
             for i in range(random.randint(0, 5)):
-                a, b = self.encrypt_msg(opt.number, v)
+                a, b = self.encrypt_msg(opt.number, v)      
                 data = {
                     'voting': v.id,
                     'voter': voter.voter_id,
-                    'vote': { 'a': a, 'b': b },
+                    'votes': [{ 'a': a, 'b': b }]
                 }
                 clear[opt.number] += 1
                 user = self.get_or_create_user(voter.voter_id)
@@ -133,21 +133,19 @@ class VotingTestCase(BaseTestCase):
     def test_complete_voting(self):
         v = self.create_voting()
         self.create_voters(v)
-
         v.create_pubkey()
         v.start_date = timezone.now()
         v.save()
-
         clear = self.store_votes(v)
-
+    
         self.login()  # set token
         v.tally_votes(self.token)
 
         tally = v.tally
         tally.sort()
         tally = {k: len(list(x)) for k, x in itertools.groupby(tally)}
-
         for q in v.question.options.all():
+
             self.assertEqual(tally.get(q.number, 0), clear.get(q.number, 0))
 
         for q in v.postproc:
@@ -173,6 +171,7 @@ class VotingTestCase(BaseTestCase):
             'desc': 'Description example',
             'question': 'I want a ',
             'question_opt': ['cat', 'dog', 'horse'],
+            'question_type': 'SO'
         }
 
         response = self.client.post('/voting/', data, format='json')
@@ -262,7 +261,9 @@ class VotingTestCase(BaseTestCase):
             'name': 'vot_test',
             'desc': 'desc_test',
             'question': 'quest_test',
-            'question_opt': ['1', '2']
+            'question_opt': ['1', '2'],
+            'question_type': 'SO'
+
         }
 
         response = self.client.post('/voting/', data, format='json')
@@ -281,6 +282,7 @@ class VotingTestCase(BaseTestCase):
             'desc': 'desc_test2',
             'question': 'quest_test',
             'question_opt': ['1', '2'],
+            'question_type': 'SO',
             'groups': 'prueba'
         }
 
@@ -293,6 +295,7 @@ class VotingTestCase(BaseTestCase):
             'desc': 'desc_test2',
             'question': 'quest_test',
             'question_opt': ['1', '2'],
+            'question_type': 'SO',
             'groups': '145646'
         }
 
@@ -305,6 +308,7 @@ class VotingTestCase(BaseTestCase):
             'desc': 'desc_test2',
             'question': 'quest_test',
             'question_opt': ['1', '2'],
+            'question_type': 'SO',
             'groups': '100,101'
         }
 
@@ -318,7 +322,7 @@ class VotingTestCase(BaseTestCase):
         self.assertEqual(numUsersInCensus, 3)
 
         
-
+'''
 class SeleniumTestCase(SeleniumBaseTestCase):    
 
     def setUp(self):
@@ -442,4 +446,4 @@ class SeleniumTestCase(SeleniumBaseTestCase):
         self.driver.find_element_by_class_name('errornote')
 
 
-
+'''

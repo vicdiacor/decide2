@@ -33,7 +33,7 @@ class Question(models.Model):
     desc = models.TextField()
 
     def __str__(self):
-        return  '{} ({})'.format(self.desc, self.type)
+        return  '{}'.format(self.desc)
 
 
 class QuestionOption(models.Model):

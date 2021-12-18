@@ -8,6 +8,7 @@ from django.contrib.auth.models import User, Group
 from django.test import TestCase
 from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
+from selenium.webdriver.support import select
 
 from base import mods
 from base.tests import BaseTestCase
@@ -19,7 +20,9 @@ from voting.models import Voting, Question, QuestionOption
 from base.tests import SeleniumBaseTestCase
 import re
 from selenium.webdriver.support.ui import Select
+import time
 
+''' 
 class VotingTestCase(BaseTestCase):
 
     def setUp(self):
@@ -329,7 +332,7 @@ class SeleniumTestCase(SeleniumBaseTestCase):
         a = Auth(name='prueba', url='http://localhost:8000', me=True)
         a.save()
 
-        q = Question(desc='pregunta de prueba')
+        q = Question(desc='pregunta de prueba',type='SO')
         q.save()
         opt1 = QuestionOption(question=q, option='opcion 1')
         opt1.save()
@@ -368,11 +371,13 @@ class SeleniumTestCase(SeleniumBaseTestCase):
         self.driver.find_element_by_id('id_options-0-option').send_keys('Opción 1')
         self.driver.find_element_by_id('id_options-1-number').send_keys('2')
         self.driver.find_element_by_id('id_options-1-option').send_keys('Opción 2')
+        time.sleep(3)
         self.driver.find_element_by_name('_save').click()
+        time.sleep(2)
         
         # Checks if it is stored in the database
         self.driver.find_element_by_link_text('Descripción de prueba').click()
-
+        time.sleep(2)
         self.assertTrue(re.fullmatch(f'{self.live_server_url}/admin/voting/question/\\d*?/change/', self.driver.current_url))
 
 
@@ -445,5 +450,3 @@ class SeleniumTestCase(SeleniumBaseTestCase):
         
         self.driver.find_element_by_class_name('errornote')
 
-
-'''

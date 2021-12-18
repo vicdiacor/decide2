@@ -87,11 +87,12 @@ def vote(filename):
     driver = webdriver.Chrome(options=options)
     for username, password in voters.items():
         print(f'{username} está votando...')
-        token = login(username, password)
-        id_ = json.loads(requests.post(f'{HOST}/authentication/getuser/', json=token).text)['id']
-        v = dict()
-        v['id'] = id_
-        add_census([v], voting_id)
+        if len(invalids) != 0:
+            token = login(username, password)
+            id_ = json.loads(requests.post(f'{HOST}/authentication/getuser/', json=token).text)['id']
+            v = dict()
+            v['id'] = id_
+            add_census([v], voting_id)
         
         driver.get(f'{HOST}/booth/{voting_id}')
         driver.find_element_by_id('username').send_keys(username)

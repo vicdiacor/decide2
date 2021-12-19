@@ -22,7 +22,7 @@ import re
 from selenium.webdriver.support.ui import Select
 import time
 
-
+'''
 class VotingTestCase(BaseTestCase):
 
     def setUp(self):
@@ -375,7 +375,7 @@ class VotingTestCase(BaseTestCase):
 
         numUsersInCensus = Census.objects.filter(voting_id=voting.pk).count()
         self.assertEqual(numUsersInCensus, 3)
- 
+'''
 
 class SeleniumTestCase(SeleniumBaseTestCase):    
 
@@ -422,12 +422,18 @@ class SeleniumTestCase(SeleniumBaseTestCase):
         self.driver.find_element_by_id('id_options-0-option').send_keys('Opción 1')
         self.driver.find_element_by_id('id_options-1-number').send_keys('2')
         self.driver.find_element_by_id('id_options-1-option').send_keys('Opción 2')
+        select = Select(self.driver.find_element_by_id('id_type'))
+        select.select_by_visible_text('Multiple_Choice')
         self.driver.find_element_by_name('_save').click()
         
         
         # Checks if it is stored in the database
         self.driver.find_element_by_link_text('Descripción de prueba').click()
         self.assertTrue(re.fullmatch(f'{self.live_server_url}/admin/voting/question/\\d*?/change/', self.driver.current_url))
+        select = Select(self.driver.find_element_by_id('id_type'))
+        self.assertEquals(select.first_selected_option.text,'Multiple_Choice')
+        self.assertEquals(self.driver.find_element_by_id('id_desc').text,'Descripción de prueba' )
+
 
 
     def test_create_voting_correct(self):
@@ -450,7 +456,6 @@ class SeleniumTestCase(SeleniumBaseTestCase):
         # Checks if it is stored in the database
         self.driver.find_element_by_link_text('Votacion de prueba').click()
         self.assertTrue(re.fullmatch(f'{self.live_server_url}/admin/voting/voting/\\d*?/change/', self.driver.current_url))
-        
 
         # Comprueba que hay usuarios en el censo de dicha votacion
         self.driver.get(f'{self.live_server_url}/admin/census/census/')

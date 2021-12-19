@@ -22,7 +22,7 @@ import re
 from selenium.webdriver.support.ui import Select
 import time
 
-''' 
+
 class VotingTestCase(BaseTestCase):
 
     def setUp(self):
@@ -60,8 +60,8 @@ class VotingTestCase(BaseTestCase):
         k.k = ElGamal.construct((p, g, y))
         return k.encrypt(msg)
 
-    def create_voting(self):
-        q = Question(desc='test question',type='SO')
+    def create_voting(self, type):
+        q = Question(desc='test question',type=type)
         q.save()
         for i in range(5):
             opt = QuestionOption(question=q, option='option {}'.format(i+1))
@@ -76,8 +76,8 @@ class VotingTestCase(BaseTestCase):
 
         return v
     
-    def create_voting_one_question_two_options(self):
-        q = Question(desc='test question',type='SO')
+    def create_voting_one_question_two_options(self,type):
+        q = Question(desc='test question',type=type)
         q.save()
         opt1 = QuestionOption(question=q, option='option 1')
         opt1.save()
@@ -94,8 +94,10 @@ class VotingTestCase(BaseTestCase):
         return v
     
     def test_create_voting_one_question_two_options(self):
-        v = self.create_voting_one_question_two_options()
-        self.assertEquals(v.question.options.all()[0].option, 'option 1')
+        voting_types= ['S0', 'MC']
+        for type in voting_types:
+            v = self.create_voting_one_question_two_options(type)
+            self.assertEquals(v.question.options.all()[0].option, 'option 1')
 
     def create_voters(self, v):
         for i in range(100):
@@ -112,15 +114,14 @@ class VotingTestCase(BaseTestCase):
         user.save()
         return user
 
-    def store_votes(self, v):
+    def store_votes_single_option(self, v):
         voters = list(Census.objects.filter(voting_id=v.id))
         voter = voters.pop()
-
         clear = {}
         for opt in v.question.options.all():
             clear[opt.number] = 0
-            for i in range(random.randint(0, 5)):
-                a, b = self.encrypt_msg(opt.number, v)      
+            for i in range(random.randint(0, 5)): # Añadimos un número de votaciones aleatorias a cada opción de la pregunta
+                a, b = self.encrypt_msg(opt.number, v)
                 data = {
                     'voting': v.id,
                     'voter': voter.voter_id,
@@ -133,26 +134,59 @@ class VotingTestCase(BaseTestCase):
                 mods.post('store', json=data)
         return clear
 
-    def test_complete_voting(self):
-        v = self.create_voting()
-        self.create_voters(v)
-        v.create_pubkey()
-        v.start_date = timezone.now()
-        v.save()
-        clear = self.store_votes(v)
+    def store_votes_multiple_choice(self, v):
+        voters = list(Census.objects.filter(voting_id=v.id))
+        choices= [opt for opt in v.question.options.all()]
+        num_total_choices= len(choices)
+        clear= {} # Indicará el número de veces que se ha votado cada opción
+
+        for opt in choices: #Inicializamos el diccionario 
+            clear[opt.number] = 0
     
-        self.login()  # set token
-        v.tally_votes(self.token)
+        for voter in random.sample(voters, 25): #Realizamos votaciones múltiples con cada usuario
+            votes= []
+            for opt in random.sample(choices, random.randint(1,num_total_choices)): #El usuario selecciona varias opciones de forma aleatoria
+                a, b = self.encrypt_msg(opt.number, v)
+                encrypted_option= { 'a': a, 'b': b }
+                votes.append(encrypted_option)
+                clear[opt.number] += 1
 
-        tally = v.tally
-        tally.sort()
-        tally = {k: len(list(x)) for k, x in itertools.groupby(tally)}
-        for q in v.question.options.all():
+            data = {
+                    'voting': v.id,
+                    'voter': voter.voter_id,
+                    'votes': votes
+                }
+            user = self.get_or_create_user(voter.voter_id)
+            self.login(user=user.username)
+            mods.post('store', json=data)
+        return clear
 
-            self.assertEqual(tally.get(q.number, 0), clear.get(q.number, 0))
+    def test_complete_voting(self):
+        voting_types= ['SO', 'MC']
+        for type in voting_types:
 
-        for q in v.postproc:
-            self.assertEqual(tally.get(q["number"], 0), q["votes"])
+            v = self.create_voting(type)
+            self.create_voters(v)
+            v.create_pubkey()
+            v.start_date = timezone.now()
+            v.save()
+            if type == 'SO':
+                clear = self.store_votes_single_option(v)
+            elif type == 'MC':
+                clear= self.store_votes_multiple_choice(v)
+        
+            self.login()  # set token
+            v.tally_votes(self.token)
+
+            tally = v.tally
+            tally.sort()
+            tally = {k: len(list(x)) for k, x in itertools.groupby(tally)}
+            for q in v.question.options.all():
+
+                self.assertEqual(tally.get(q.number, 0), clear.get(q.number, 0))
+
+            for q in v.postproc:
+                self.assertEqual(tally.get(q["number"], 0), q["votes"])
 
     def test_create_voting_from_api(self):
         data = {'name': 'Example'}
@@ -181,7 +215,7 @@ class VotingTestCase(BaseTestCase):
         self.assertEqual(response.status_code, 201)
 
     def test_update_voting(self):
-        voting = self.create_voting()
+        voting = self.create_voting('SO')
 
         data = {'action': 'start'}
         #response = self.client.post('/voting/{}/'.format(voting.pk), data, format='json')
@@ -265,7 +299,7 @@ class VotingTestCase(BaseTestCase):
             'desc': 'desc_test',
             'question': 'quest_test',
             'question_opt': ['1', '2'],
-            'question_type': 'SO'
+            'question_type': 'MC'
 
         }
 
@@ -274,7 +308,7 @@ class VotingTestCase(BaseTestCase):
 
         voting = Voting.objects.get(name='vot_test')
         self.assertEqual(voting.desc, 'desc_test')
-
+        self.assertEqual(voting.question.type, 'MC')
 
     def test_create_voting_api_with_group(self):
         self.login()
@@ -325,7 +359,7 @@ class VotingTestCase(BaseTestCase):
         self.assertEqual(numUsersInCensus, 3)
 
         
-'''
+
 class SeleniumTestCase(SeleniumBaseTestCase):    
 
     def setUp(self):
@@ -371,13 +405,11 @@ class SeleniumTestCase(SeleniumBaseTestCase):
         self.driver.find_element_by_id('id_options-0-option').send_keys('Opción 1')
         self.driver.find_element_by_id('id_options-1-number').send_keys('2')
         self.driver.find_element_by_id('id_options-1-option').send_keys('Opción 2')
-        time.sleep(3)
         self.driver.find_element_by_name('_save').click()
-        time.sleep(2)
+        
         
         # Checks if it is stored in the database
         self.driver.find_element_by_link_text('Descripción de prueba').click()
-        time.sleep(2)
         self.assertTrue(re.fullmatch(f'{self.live_server_url}/admin/voting/question/\\d*?/change/', self.driver.current_url))
 
 

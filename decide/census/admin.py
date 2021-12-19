@@ -1,8 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
-from .models import Census, ParentGroup, Request, RequestStatus
-
-
+from .models import Census, ParentGroup, Request
 
 class CensusAdmin(admin.ModelAdmin):
     list_display = ('voting_id', 'voter_id', 'adscripcion')
@@ -18,21 +16,28 @@ def accept(modeladmin, request, queryset):
     for v in queryset.all():
         voter = User.objects.get(pk=v.voter_id)
         group = ParentGroup.objects.get(pk=v.group_id)
-        #Guardar el group en el voter y guardarlo
-        v.status = RequestStatus.ACCEPTED        
-        v.save()
+        if v.status == 'PENDING' and group.isPublic == False:
+            group.voters.add(voter)
+            v.status = Request.ACCEPTED        
+            v.save()
 
 def reject(modeladmin, request, queryset):
     for v in queryset.all():
-        v.status = RequestStatus.REJECTED        
+        v.status = Request.REJECTED        
         v.save()
 
 class RequestAdmin(admin.ModelAdmin):
-    list_display = ('voter_id', 'group_id')
+    list_display = ('voter_id', 'group_id', 'request_status')
     list_filter = ('voter_id', 'group_id')
+
+    exclude = ['status']
 
     search_fields = ('voter_id', 'group_id')
 
+    actions = [ accept, reject]
+
+    def request_status(self, obj):
+        return obj.status
            
                     
 

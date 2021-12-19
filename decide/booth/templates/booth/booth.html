@@ -54,6 +54,7 @@
             <div v-if="!signup">
                 <h2>[[ voting.question.desc ]]</h2>
                 <div v-if=" voting.question.type == 'SO'">
+                    <h4 id="instruction"> Seleccione una única opción: </h4>
                     <b-form-group v-for="opt in voting.question.options" :key="opt.number">
                         <b-form-radio v-model="selected"
                                     :id="'q' + opt.number"
@@ -65,7 +66,7 @@
                 </div>
 
                 <div v-if="voting.question.type == 'MC'">
-                  
+                    <h4 id="instruction"> Puede seleccionar múltiples opciones: </h4>
                         <div v-for="opt in voting.question.options" :key="opt.number">
                           <input type="checkbox" v-model="selectedArray" :id="'q' + opt.number" :value="opt.number" :name="'question' + opt.number" />
                           [[ opt.option ]]

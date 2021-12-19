@@ -52,7 +52,12 @@ class StoreView(generics.ListAPIView):
         token = request.auth.key
         voter = mods.post('authentication', entry_point='/getuser/', json={'token': token})
         voter_id = voter.get('id', None)
-        if not voter_id or voter_id != uid:
+        
+        # borrar   self.assertEqual(response.status_code, 403)
+        usuario_ha_votado= True if (Vote.objects.filter(voter_id=voter_id,voting_id=vid).count()!=0) else False
+    
+        
+        if not voter_id or voter_id != uid or usuario_ha_votado:
             return Response({}, status=status.HTTP_401_UNAUTHORIZED)
 
         # the user is in the census

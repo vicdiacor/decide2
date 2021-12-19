@@ -18,11 +18,11 @@ class Question(models.Model):
 
     SINGLE_OPTION = 'SO'
     MULTIPLE_CHOICE = 'MC'
-    RANKING = 'RK'
+    
     TYPES_CHOICES = (
         (SINGLE_OPTION, 'Single_Option'),
         (MULTIPLE_CHOICE, 'Multiple_Choice'),
-        (RANKING, 'Ranking'),
+        
        
     )
     type = models.CharField(

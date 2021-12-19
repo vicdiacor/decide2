@@ -210,16 +210,44 @@ class VotingTestCase(BaseTestCase):
         response = mods.post('voting', params=data, response=True)
         self.assertEqual(response.status_code, 400)
 
+        
         data = {
             'name': 'Example',
             'desc': 'Description example',
             'question': 'I want a ',
             'question_opt': ['cat', 'dog', 'horse'],
-            'question_type': 'SO'
+            'question_type': 'MC'
         }
+        
 
+        # Petición post correcta
         response = self.client.post('/voting/', data, format='json')
         self.assertEqual(response.status_code, 201)
+
+        # Comprobamos que se ha creado la votación en la base de datos
+        voting = Voting.objects.get(name='Example')
+        self.assertEqual(voting.desc, 'Description example')
+        self.assertEqual(voting.question.desc, 'I want a ')
+        self.assertEqual(voting.question.type, 'MC')
+        self.assertEquals(voting.question.options.all()[0].option, 'cat')
+        self.assertEquals(voting.question.options.all()[1].option, 'dog')
+        self.assertEquals(voting.question.options.all()[2].option, 'horse')
+        self.assertEquals(voting.question.type, 'MC' )
+
+    def test_create_voting_from_api_incorrect_questionType(self):
+        # login with user admin
+        self.login()
+        
+        incorrect_data = {
+            'name': 'Example',
+            'desc': 'Description example',
+            'question': 'I want a ',
+            'question_opt': ['cat', 'dog', 'horse'],
+            'question_type': 'XX'
+        }
+         # Petición post incorrecta (question_type incorrecto)
+        response = self.client.post('/voting/', incorrect_data, format='json')
+        self.assertEqual(response.status_code, 400)
 
     def test_update_voting(self):
         voting = self.create_voting('SO')
@@ -298,24 +326,7 @@ class VotingTestCase(BaseTestCase):
         response = self.client.put('/voting/{}/'.format(voting.pk), data, format='json')
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json(), 'Voting already tallied')
-    
-    def test_create_voting_api(self):
-        self.login()
-        data = {
-            'name': 'vot_test',
-            'desc': 'desc_test',
-            'question': 'quest_test',
-            'question_opt': ['1', '2'],
-            'question_type': 'MC'
 
-        }
-
-        response = self.client.post('/voting/', data, format='json')
-        self.assertEqual(response.status_code, 201)
-
-        voting = Voting.objects.get(name='vot_test')
-        self.assertEqual(voting.desc, 'desc_test')
-        self.assertEqual(voting.question.type, 'MC')
 
     def test_create_voting_api_with_group(self):
         self.login()

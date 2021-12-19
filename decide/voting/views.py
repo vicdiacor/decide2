@@ -60,6 +60,10 @@ class VotingView(generics.ListCreateAPIView):
 
         #Creación de la pregunta
         question_type= request.data.get('question_type')
+
+        if (question_type!='' and question_type!=None and question_type!= 'SO' and  question_type!='MC'):
+            return Response({}, status=status.HTTP_400_BAD_REQUEST)
+            
         question = Question(desc=request.data.get('question'),type= question_type if (question_type!='' and question_type!=None) else 'SO' )
         question.save()
         for idx, q_opt in enumerate(request.data.get('question_opt')):

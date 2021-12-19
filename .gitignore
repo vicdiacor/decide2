@@ -102,5 +102,7 @@ ENV/
 
 .vagrant
 loadtest/
-loadtest/gen_census.py
-loadtest/locustfile.py
+
+# Ficheros de importar/exportar grupos
+temp_export.xlsx
+temp_import.xlsx

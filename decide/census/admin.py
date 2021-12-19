@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Census
+from .models import Census, ParentGroup
 
 
 class CensusAdmin(admin.ModelAdmin):
@@ -9,5 +9,10 @@ class CensusAdmin(admin.ModelAdmin):
 
     search_fields = ('voter_id', )
 
+class ParentGroupAdmin(admin.ModelAdmin):
+    list_display = ('name', 'isPublic')
+    list_filter = ('name', 'isPublic')
+
 
 admin.site.register(Census, CensusAdmin)
+admin.site.register(ParentGroup, ParentGroupAdmin)

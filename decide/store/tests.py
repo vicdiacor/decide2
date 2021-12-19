@@ -60,7 +60,7 @@ class StoreTextCase(BaseTestCase):
             data = {
                 "voting": v,
                 "voter": random_user,
-                "vote": { "a": a, "b": b }
+                "votes": [{ "a": a, "b": b }]
             }
             response = self.client.post('/store/', data, format='json')
             self.assertEqual(response.status_code, 200)
@@ -72,7 +72,7 @@ class StoreTextCase(BaseTestCase):
         data = {
             "voting": 1,
             "voter": 1,
-            "vote": { "a": 1, "b": 1 }
+            "votes": [{ "a": 1, "b": 1 }]
         }
         response = self.client.post('/store/', data, format='json')
         self.assertEqual(response.status_code, 401)
@@ -87,7 +87,7 @@ class StoreTextCase(BaseTestCase):
         data = {
             "voting": VOTING_PK,
             "voter": 1,
-            "vote": { "a": CTE_A, "b": CTE_B }
+            "votes": [{ "a": CTE_A, "b": CTE_B }]
         }
         user = self.get_or_create_user(1)
         self.login(user=user.username)
@@ -168,7 +168,7 @@ class StoreTextCase(BaseTestCase):
         data = {
             "voting": 5001,
             "voter": 1,
-            "vote": { "a": 30, "b": 55 }
+            "votes": [{ "a": 30, "b": 55 }]
         }
         census = Census(voting_id=5001, voter_id=1)
         census.save()

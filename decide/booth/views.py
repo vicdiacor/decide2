@@ -17,15 +17,13 @@ class BoothView(TemplateView):
 
         try:
             r = mods.get('voting', params={'id': vid})
-            questionType= Voting.objects.get(pk=vid).question.type
-            
             # Casting numbers to string to manage in javascript with BigInt
             # and avoid problems with js and big number conversion
             for k, v in r[0]['pub_key'].items():
                 r[0]['pub_key'][k] = str(v)
 
             context['voting'] = json.dumps(r[0])
-            context["questionType"]= json.dumps(str(questionType))
+            
         except:
             raise Http404
 

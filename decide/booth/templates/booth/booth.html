@@ -53,8 +53,7 @@
             <!-- Voting -->
             <div v-if="!signup">
                 <h2>[[ voting.question.desc ]]</h2>
-
-                <div v-if="{{questionType}} == 'SO'">
+                <div v-if=" voting.question.type == 'SO'">
                     <b-form-group v-for="opt in voting.question.options" :key="opt.number">
                         <b-form-radio v-model="selected"
                                     :id="'q' + opt.number"
@@ -65,7 +64,7 @@
                     </b-form-group>
                 </div>
 
-                <div v-if="{{ questionType }} == 'MC'">
+                <div v-if="voting.question.type == 'MC'">
                   
                         <div v-for="opt in voting.question.options" :key="opt.number">
                           <input type="checkbox" v-model="selectedArray" :id="'q' + opt.number" :value="opt.number" :name="'question' + opt.number" />

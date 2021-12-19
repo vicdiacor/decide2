@@ -143,7 +143,7 @@ class VotingTestCase(BaseTestCase):
         for opt in choices: #Inicializamos el diccionario 
             clear[opt.number] = 0
     
-        for voter in random.sample(voters, 25): #Realizamos votaciones múltiples con cada usuario
+        for voter in voters[:10]: #Realizamos votaciones múltiples con 10 usuarios
             votes= []
             for opt in random.sample(choices, random.randint(1,num_total_choices)): #El usuario selecciona varias opciones de forma aleatoria
                 a, b = self.encrypt_msg(opt.number, v)
@@ -357,8 +357,7 @@ class VotingTestCase(BaseTestCase):
 
         numUsersInCensus = Census.objects.filter(voting_id=voting.pk).count()
         self.assertEqual(numUsersInCensus, 3)
-
-        
+ 
 
 class SeleniumTestCase(SeleniumBaseTestCase):    
 

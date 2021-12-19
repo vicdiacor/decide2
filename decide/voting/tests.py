@@ -94,10 +94,17 @@ class VotingTestCase(BaseTestCase):
         return v
     
     def test_create_voting_one_question_two_options(self):
-        voting_types= ['S0', 'MC']
+        voting_types= ['SO', 'MC']
         for type in voting_types:
-            v = self.create_voting_one_question_two_options(type)
-            self.assertEquals(v.question.options.all()[0].option, 'option 1')
+            new_voting_to_store= self.create_voting_one_question_two_options(type)
+            voting_retrieved_database= Voting.objects.get(pk= new_voting_to_store.pk)
+            self.assertEquals(voting_retrieved_database.question.options.all()[0].option, 'option 1')
+            self.assertEquals(voting_retrieved_database.question.options.all()[1].option, 'option 2')
+            self.assertEquals(voting_retrieved_database.question.desc, 'test question')
+            self.assertEquals(voting_retrieved_database.name, 'test voting')
+            self.assertEquals(voting_retrieved_database.question.type, type )
+
+
 
     def create_voters(self, v):
         for i in range(100):
@@ -480,4 +487,3 @@ class SeleniumTestCase(SeleniumBaseTestCase):
         self.driver.find_element_by_name('_save').click()        
         
         self.driver.find_element_by_class_name('errornote')
-

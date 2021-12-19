@@ -78,6 +78,9 @@ class StoreTextCase(BaseTestCase):
         self.assertEqual(response.status_code, 401)
 
     def test_store_vote(self):
+
+        # Test para Votación single_option (+1 voto)
+
         VOTING_PK = 345
         CTE_A = 96
         CTE_B = 184
@@ -99,6 +102,41 @@ class StoreTextCase(BaseTestCase):
         self.assertEqual(Vote.objects.first().voter_id, 1)
         self.assertEqual(Vote.objects.first().a, CTE_A)
         self.assertEqual(Vote.objects.first().b, CTE_B)
+
+        # Test para Votación Multiple_Choices seleccionando 2 opciones (+2 votos)
+        
+        VOTING_PK_2 = 346
+        CTE_A2 = 97
+        CTE_B2 = 185
+        CTE_C2= 98
+        CTE_D2= 186
+        census = Census(voting_id=VOTING_PK_2, voter_id=1)
+        census.save()
+        self.gen_voting(VOTING_PK_2)
+        data = {
+            "voting": VOTING_PK_2,
+            "voter": 1,
+            "votes": [{ "a": CTE_A2, "b": CTE_B2 }, {"a": CTE_C2, "b": CTE_D2 }]
+        }
+        user = self.get_or_create_user(1)
+        self.login(user=user.username)
+        response = self.client.post('/store/', data, format='json')
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(Vote.objects.count(), 3) # 1 voto single_option + 2 votos Multiple_Choices
+
+        votos = Vote.objects.filter(voting_id=VOTING_PK_2, voter_id= 1)
+        self.assertEquals(len(votos), 2) # Se han realizado 2 votos Multiple_Choices
+
+        for voto in votos:
+            self.assertEqual(voto.voting_id, VOTING_PK_2)
+            self.assertEqual(voto.voter_id, 1)
+            if(voto.a==CTE_A2):
+                self.assertEqual(voto.b, CTE_B2)
+            else:
+                self.assertEqual(voto.a, CTE_C2)
+                self.assertEqual(voto.b, CTE_D2)
+         
 
     def test_vote(self):
         self.gen_votes()
@@ -163,6 +201,29 @@ class StoreTextCase(BaseTestCase):
         self.assertEqual(len(votes), 1)
         self.assertEqual(votes[0]["voting_id"], v)
         self.assertEqual(votes[0]["voter_id"], u)
+
+        # Enviar votación múltiple con 2 opciones seleccionadas
+
+        census = Census(voting_id=6000, voter_id=1)
+        census.save()
+        self.gen_voting(6000)
+        data = {
+            "voting": 6000,
+            "voter": 1,
+            "votes": [{ "a": 444, "b": 64 }, {"a": 445, "b": 65 }]
+        }
+        user = self.get_or_create_user(1)
+        self.login(user=user.username)
+        response = self.client.post('/store/', data, format='json')
+        self.assertEqual(response.status_code, 200)
+
+        # Comprobar que la api devuelve 2 votos de dicho usuario para la votación anterior
+
+        self.login()
+        response = self.client.get('/store/?voting_id={}&voter_id={}'.format(6000, 1), format='json')
+        self.assertEqual(response.status_code, 200)
+        votes = response.json()
+        self.assertEqual(len(votes), 2)
 
     def test_voting_status(self):
         data = {

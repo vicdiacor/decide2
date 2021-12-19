@@ -22,7 +22,7 @@ import re
 from selenium.webdriver.support.ui import Select
 import time
 
-'''
+
 class VotingTestCase(BaseTestCase):
 
     def setUp(self):
@@ -234,6 +234,19 @@ class VotingTestCase(BaseTestCase):
         self.assertEquals(voting.question.options.all()[2].option, 'horse')
         self.assertEquals(voting.question.type, 'MC' )
 
+        data_without_question_type= {
+            'name': 'Example2',
+            'desc': 'Description example2',
+            'question': 'I want a...',
+            'question_opt': ['cat', 'dog', 'horse'],
+        }
+
+        #Comprobamos que si no se envía el campo question_type , se asigna de forma predeterminada el tipo "single_option"
+        response = self.client.post('/voting/', data_without_question_type, format='json')
+        self.assertEqual(response.status_code, 201)
+        voting = Voting.objects.get(name='Example2')
+        self.assertEquals(voting.question.type, 'SO')
+
     def test_create_voting_from_api_incorrect_questionType(self):
         # login with user admin
         self.login()
@@ -375,7 +388,7 @@ class VotingTestCase(BaseTestCase):
 
         numUsersInCensus = Census.objects.filter(voting_id=voting.pk).count()
         self.assertEqual(numUsersInCensus, 3)
-'''
+
 
 class SeleniumTestCase(SeleniumBaseTestCase):    
 

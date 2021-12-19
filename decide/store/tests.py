@@ -225,6 +225,11 @@ class StoreTextCase(BaseTestCase):
         votes = response.json()
         self.assertEqual(len(votes), 2)
 
+        # Comprobar que el usuario no puede volver a votar en la misma votación otra vez
+        response = self.client.post('/store/', data, format='json')
+        self.assertEqual(response.status_code, 401)
+
+
     def test_voting_status(self):
         data = {
             "voting": 5001,

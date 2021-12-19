@@ -247,7 +247,7 @@ class VotingTestCase(BaseTestCase):
         }
          # Petición post incorrecta (question_type incorrecto)
         response = self.client.post('/voting/', incorrect_data, format='json')
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 400) 
 
     def test_update_voting(self):
         voting = self.create_voting('SO')

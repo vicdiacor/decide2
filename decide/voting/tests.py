@@ -10,6 +10,7 @@ from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
 from selenium.webdriver.support import select
 
+
 from base import mods
 from base.tests import BaseTestCase
 from census.models import Census
@@ -232,7 +233,6 @@ class VotingTestCase(BaseTestCase):
         self.assertEquals(voting.question.options.all()[0].option, 'cat')
         self.assertEquals(voting.question.options.all()[1].option, 'dog')
         self.assertEquals(voting.question.options.all()[2].option, 'horse')
-        self.assertEquals(voting.question.type, 'MC' )
 
         data_without_question_type= {
             'name': 'Example2',

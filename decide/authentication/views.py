@@ -9,10 +9,10 @@ from rest_framework.status import (
 )
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, render
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ViewDoesNotExist
 
 from .serializers import UserSerializer
 from django.contrib.auth.forms import AuthenticationForm
@@ -181,12 +181,32 @@ def exportGroup(request):
 
     return render(request, 'export_group.html', {'form': form})
 
-def notification(request):
+def voting_admin_notification(request):
 
-    votaciones = Voting.objects.all()
+    votings= Voting.objects.all()
 
     data = {
-        'votaciones': votaciones
+        'votings': votings
     }
 
-    return render(request, 'list_notifications.html', data)
+    return render(request, 'list_admin_notifications.html', data)
+
+def voting_user_notification(request):
+
+    votings= Voting.objects.all()
+    groups = request.user.groups.values_list('id',flat = True)
+    groups_by_user = list(groups)
+    votings_list = []
+    votings_by_user = []
+    for v in votings:
+        votings_list.append(v.groups)
+        for vo in votings_list:
+            for g in groups_by_user:
+                if str(vo) == str(g):
+                    votings_by_user.append(v)
+    data = {
+        'votings': votings_by_user,
+        'groups': groups_by_user
+    }
+
+    return render(request, 'list_user_notifications.html', data )

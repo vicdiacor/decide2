@@ -28,6 +28,8 @@ import os
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 
+from voting.models import Voting
+
 def registro(request):
     if request.method == 'POST':
         form = SignUpForm(request.POST)
@@ -178,3 +180,13 @@ def exportGroup(request):
             return resp
 
     return render(request, 'export_group.html', {'form': form})
+
+def notification(request):
+
+    votaciones = Voting.objects.all()
+
+    data = {
+        'votaciones': votaciones
+    }
+
+    return render(request, 'list_notifications.html', data)

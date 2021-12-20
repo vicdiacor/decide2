@@ -24,6 +24,7 @@
         {% if user.is_authenticated %}
             <li><a>Sesión iniciada de {{user.username }}</a></li>
             <li><a href="/authentication/cerrar_sesion">Cerrar sesión</a></li>
+            <li><a href="/authentication/notifications">Notificaciones</a></li>
         {%else %}
             <li><a href="/authentication/registrarse">Regístrate</a></li>
             <li><a href="/authentication/iniciar_sesion">Iniciar sesión</a></li>

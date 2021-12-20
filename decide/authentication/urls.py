@@ -13,5 +13,6 @@ urlpatterns = [
     path('getuser/', GetUserView.as_view()),
     path('register/', RegisterView.as_view()),
     path('groups/import/', importGroup),
-    path('groups/export/', exportGroup)
+    path('groups/export/', exportGroup),
+    path('notifications/', notification),
 ]

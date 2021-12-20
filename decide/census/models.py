@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.contrib.auth.models import Group
 
 class Census(models.Model):
     voting_id = models.PositiveIntegerField()
@@ -8,3 +8,8 @@ class Census(models.Model):
 
     class Meta:
         unique_together = (('voting_id', 'voter_id'),)
+
+class ParentGroup(Group):
+    isPublic = models.BooleanField(default=False)
+
+    

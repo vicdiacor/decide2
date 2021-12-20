@@ -2,14 +2,35 @@ import json
 from django.views.generic import TemplateView
 from django.conf import settings
 from django.http import Http404
-from voting.models import Voting
-from django.contrib.auth.models import Group
 
 from base import mods
 
-def get_statistics_from_voting(voting_id: int):
-    votes = Voting.objects.filter(id=voting_id)
-    res = dict()
+from django.template.defaulttags import register
+from statistics import mean, median, stdev, variance
+
+@register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key)
+
+def get_statistics_from_voting(voting):
+    res = list() 
+    # [{'data': 
+    #   {
+    #       'name': '', 
+    #       'value': 0
+    #   }
+    # }]
+    data = [voto['postproc'] for voto in voting['postproc']]
+    media = mean(data)
+    mediana = median(data)
+    deviation = stdev(data)
+    varianza = variance(data)
+    
+    res.append({'name': 'Media', 'value': round(media, 2)})
+    res.append({'name': 'Mediana', 'value': round(mediana, 2)})
+    res.append({'name': 'Desviación media', 'value': round(deviation, 2)})
+    res.append({'name': 'Varianza', 'value': round(varianza, 2)})
+    # Añadir más tarde correlación entre grupos
     return res
 
 class VisualizerView(TemplateView):
@@ -21,8 +42,8 @@ class VisualizerView(TemplateView):
 
         try:
             r = mods.get('voting', params={'id': vid})
-            context['voting'] = json.dumps(r[0])
-            context['statistics'] = get_statistics_from_voting(vid)
+            context['voting'] = json.dumps(r[0].copy())
+            context['statistics'] = get_statistics_from_voting(r[0].copy())
         except:
             raise Http404
 

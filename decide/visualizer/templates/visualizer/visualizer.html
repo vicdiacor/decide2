@@ -14,31 +14,32 @@
         <b-navbar-brand tag="h1">Decide</b-navbar-brand>
     </b-navbar>
 
-    <div class="voting container">
+    <div class="voting container" width="50%">
         <h1>[[ voting.id ]] - [[ voting.name ]]</h1>
         <h2 v-if="!voting.start_date">Votación no comenzada</h2>
         <h2 v-else-if="!voting.end_date">Votación en curso</h2>
         <div v-else>
-            <h2 class="heading">Resultados:</h2>
+            <h2 class="heading">Estadísticas:</h2>
 
             <table class="table table-bordered table-striped">
                 <thead>
                     <tr>
-                        <th>Opción</th>
-                        <th>Puntuación</th>
-                        <th>Votos</th>
+                        <th></th>
+                        <th>Valor</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="opt in voting.postproc" :key="opt.number">
-                        <th>[[opt.option]]</th>
-                        <td>[[opt.postproc]]</td>
-                        <td class="text-muted">[[opt.votes]]</td>
+                    {% for data in statistics %}
+                    <tr>
+                        <th>{{data.name}}</th>
+                        <td>{{data.value}}</td>
                     </tr>
+                    {% endfor %}
                 </tbody>
             </table>
+            <div id="buttons" style="padding-top: 2px;"></div>
+            <div id="canvas"></div>
         </div>
-        <canvas id="myChart"></canvas>
     </div>
 </div>
 {% endblock %}
@@ -93,29 +94,56 @@
         i = i + 1
     }
 
-    var ctx = document.getElementById("myChart").getContext('2d');
-    var myChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Number of Votes',
-                data: data,
-                backgroundColor: background,
-                borderColor: border,
-                borderWidth: 1
-            }]
-        },
-        options: {
-            scales: {
-                yAxes: [{
-                    ticks: {
-                        beginAtZero: true
-                    }
-                }]
+    const datasets = [{
+        label: 'Number of Votes',
+        data: data,
+        backgroundColor: background,
+        borderColor: border,
+        borderWidth: 1,
+    }]
+
+    const types = ['bar', 'doughnut', 'pie', 'polarArea']
+    // Crear botones
+    for(const type in types){
+        button = document.createElement('button')
+        button.setAttribute('onclick', 'changeChart("' + types[type] + '")')
+        button.setAttribute('class', 'btn btn-info')
+        button.setAttribute('style', 'margin-right: 2px; width: 10%;')
+        button.appendChild(document.createTextNode(types[type]))
+        // button = '<button onclick="changeChart(' + type + ')" class="btn btn-info" style="margin-right: 2px;">' + type + '</button>'
+        document.getElementById('buttons').appendChild(button)
+    }
+
+    var myChart
+    
+    function createChart(type) {
+        c = document.createElement('canvas')
+        c.setAttribute('id', 'myChart')
+        document.getElementById('canvas').appendChild(c)
+        var ctx = document.getElementById('myChart').getContext('2d');
+        myChart = new Chart(ctx, {
+            type: type,
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }]
+                }
             }
-        }
-    });
+        });
+    }
+    createChart('bar')
+
+    function changeChart(type) {
+        document.getElementById('myChart').remove()
+        createChart(type)
+    }
 </script>
 </body>
 {% endblock %}

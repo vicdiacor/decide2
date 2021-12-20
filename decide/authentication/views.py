@@ -139,7 +139,7 @@ def importGroup(request):
                 users_list = readTxtFile(file)
             else:
                 messages.error(request, "Formato de archivo no válido.")
-                return render(request, 'import_group.html', {'form': form})
+                return render(request, 'import_group.html', {'form': form, 'STATIC_URL':settings.STATIC_URL})
 
             # Si todos los usuarios existen, creo el grupo y añado todos los usuarios de la lista
             if (users_list != None):
@@ -152,7 +152,7 @@ def importGroup(request):
             else:
                 messages.error(request, "Uno de los usuarios indicados no existe.")
 
-    return render(request, 'import_group.html', {'form': form})
+    return render(request, 'import_group.html', {'form': form, 'STATIC_URL':settings.STATIC_URL})
         
 
 
@@ -177,4 +177,4 @@ def exportGroup(request):
             resp['Content-Disposition'] = 'attachment; filename=export_group.xlsx'
             return resp
 
-    return render(request, 'export_group.html', {'form': form})
+    return render(request, 'export_group.html', {'form': form, 'STATIC_URL':settings.STATIC_URL})

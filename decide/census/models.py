@@ -11,6 +11,6 @@ class Census(models.Model):
 
 class ParentGroup(Group):
     isPublic = models.BooleanField(default=False)
-    voters = models.ManyToManyField(User)
+    voters = models.ManyToManyField(User, blank=True)
 
     

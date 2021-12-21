@@ -1,6 +1,5 @@
 from django.shortcuts import render, redirect
 from decide import settings
-from django.views.generic import TemplateView
 
 from rest_framework.response import Response
 from rest_framework.status import (

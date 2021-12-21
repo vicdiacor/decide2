@@ -1,7 +1,8 @@
 import logging as log
 import json
 from django.http import Http404
-from django.contrib.auth.models import User
+from rest_framework import status
+from django.contrib.auth.models import User,Group
 from django.db.utils import IntegrityError
 from django.views.generic import TemplateView
 from django.conf import settings
@@ -28,24 +29,28 @@ class CensusCreate(generics.ListCreateAPIView):
     
     
     def post(self, request):
-            #Obtener grupo
-            id_group= int(request.data.get('group_to_join'))
+            #Obtener grupo y usuario
+            id_group= int(request.data.get('group_to_join'))        
             id_user= int(request.data.get('userId'))
+
             try:
-                group = ParentGroup.objects.get(id_group)
-                user = User.objects.get(id_user)
-                #Grupo publico
-                if group !=None and user!= None:
-                    if group.isPublic==True:
-                        group.add(user)
-                        group.save()
-                #Grupo privado
+                group = ParentGroup.objects.get(pk=id_group)
+                user = User.objects.get(pk=id_user)
+                voters = User.objects.filter(groups=group)
+                userIsInTheGroup= user in voters
+                # Añadir usuario al grupo 
+                if group!=None and user!= None and not userIsInTheGroup: #Comprobar también que el usuario no está ya en el grupo....
+                    if group.isPublic:
+                        print("El grupo es publico")
+                        user.groups.add(group)
+                        print("Usuario añadido al grupo ")
+                        return Response({})
+                #Grupo privado o en el que ya está el usuario
                 else:
-                    return Response('No puedes unirte a un grupo privado', status=ST_409)
+                    print("No puedes unirte a este grupo privado o en el que ya estás")
+                    return Response({}, status=status.HTTP_401_UNAUTHORIZED)
             except:
-                return Response('Error try to add user to group', status=ST_409)
-            return Response('User added to group', status=ST_201)
-    
+                return Response({}, status=status.HTTP_401_UNAUTHORIZED)
 
     def create(self, request, *args, **kwargs):
         voting_id = request.data.get('voting_id')
@@ -201,7 +206,6 @@ class GroupsView(TemplateView):
        
         
         context['groups_info'] = diccionario
-        print(json.dumps(diccionario))
         context['KEYBITS'] = settings.KEYBITS
 
         return context

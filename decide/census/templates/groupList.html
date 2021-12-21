@@ -174,7 +174,6 @@
                 },
                 joinGroup(evt) {
                    
-                    
                     var data = {
                         userId: this.user.id,
                         group_to_join: this.selected,
@@ -185,7 +184,7 @@
                             this.showAlert("success", '{% trans "Congratulations. Now you are in the group!" %}');
                         })
                         .catch(error => {
-                            this.showAlert("danger", '{% trans "Error: " %}' + error);
+                            this.showAlert("danger", '{% trans "No puedes unirte a un grupo al que ya perteneces o a un grupo privado || Error:" %}' + error);
                         });
                 },
                 showAlert(lvl, msg) {

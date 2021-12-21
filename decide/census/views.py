@@ -1,10 +1,14 @@
 import logging as log
+import json
+from django.http import Http404
+from django.contrib.auth.models import User
 from django.db.utils import IntegrityError
 from django.views.generic import TemplateView
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import generics, permissions
 from rest_framework.response import Response
+from .serializers import ParentGroupSerializer
 from rest_framework.status import (
     HTTP_201_CREATED as ST_201,
     HTTP_204_NO_CONTENT as ST_204,
@@ -21,6 +25,27 @@ group_successfully_created = "Group successfully created"
 
 class CensusCreate(generics.ListCreateAPIView):
     permission_classes = (UserIsStaff,)
+    
+    
+    def post(self, request):
+            #Obtener grupo
+            id_group= int(request.data.get('group_to_join'))
+            id_user= int(request.data.get('userId'))
+            try:
+                group = ParentGroup.objects.get(id_group)
+                user = User.objects.get(id_user)
+                #Grupo publico
+                if group !=None and user!= None:
+                    if group.isPublic==True:
+                        group.add(user)
+                        group.save()
+                #Grupo privado
+                else:
+                    return Response('No puedes unirte a un grupo privado', status=ST_409)
+            except:
+                return Response('Error try to add user to group', status=ST_409)
+            return Response('User added to group', status=ST_201)
+    
 
     def create(self, request, *args, **kwargs):
         voting_id = request.data.get('voting_id')
@@ -164,37 +189,19 @@ class GroupOperations():
 # TODO: check permissions and census
 class GroupsView(TemplateView):
     template_name = 'groupList.html'
-
-    def post(self, request):
-        if request.data.get('list')==True:
-            user = User.objects.filter(request.data.get('user_id'))
-            groups_user = ParentGroup.objects.filter(voters=user)
-            groups = ParentGroup.objects.exclude(voters=user)
-            
-            context['groups_user'] = groups_user
-            context['groups'] = groups
-        elif request.data.get('add')==True:
-            #Obtener grupo
-            user = User.objects.filter(request.data.get('user_id'))
-            group = ParentGroup.objects.filter(request.data.get('group_id'))
-            #Grupo publico
-            if group.isPublic==True:
-                group.add(user)
-                group.save()
-            #Grupo privado
-            else:
-                request = Request(voter_id=user.id, group_id=group.id)
-                request.save()
-        return context
-
+    
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        groups = ParentGroup.objects.all()
+
+        diccionario= {}
+        for group in groups:
+            diccionario[group.pk]= {"name": group.name, "isPublic": group.isPublic }
+       
+        
+        context['groups_info'] = diccionario
+        print(json.dumps(diccionario))
         context['KEYBITS'] = settings.KEYBITS
-        
-        #user = self.request('user_id')
-        #group = ParentGroup.objects.filter(voters=user)
-        
-        #context['groups'] = group
-        #print(ParentGroup.objects.all())
+
         return context

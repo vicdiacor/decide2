@@ -27,8 +27,7 @@
 
         <div class="groups">
             <h1> GRUPOS </h1>
-            
-
+        
             <!-- Register -->
             <b-form @submit="onSubmitLogin" v-if="signup">
                 <b-form-group label="{% trans "Username" %}" label-for="username">
@@ -52,21 +51,20 @@
 
             <!-- Groups -->
             <div v-if="!signup">
-                <h2> Perteneces a los siguientes grupos: </h2>
-                {% for i in groups %}
-                <h3> {{ i.name }} </h3>
-                {% endfor %}
-                <h2> Listado de grupos </h2>
-                <p> Aquí meter información de cada grupo, y a la derecha el siguiente formulario con el siguiente botón:</p>
-
                
-                <b-form-group v-for="group in groups" :key="group.id">
+                <h2> Listado de grupos </h2>
+                 
+                {% for groupId, details in groups_info.items %}
+
                     <b-form-radio v-model="selected"
-                                :id="group.id"
-                                name="group.id"
-                                :value="group.id">
-                        [[ group.id ]]
+                        :id= "{{ groupId }}"
+                        name="{{ groupId }}"
+                        :value="{{ groupId }}">
+                        <b> Id: </b> {{ groupId }} <b>  Nombre:  </b>  {{ details.name }} <b> Publico:  </b>{{ details.isPublic }} 
+
                     </b-form-radio>
+               
+                {% endfor %}
                 
                 <b-button type="button" variant="primary" v-on:click="joinGroup">
                     {% trans "Unirse" %}
@@ -153,18 +151,7 @@
                         .catch(error => {
                             this.showAlert("danger", '{% trans "Error: " %}' + error);
                         });
-                    var data = {
-                        list: True,
-                        user_id: this.user.id,
-                        token: this.token
-                    }
-                    this.postData("{% url "gateway" "census" "/groupList" %}", data)
-                        .then(data => {
-                            this.showAlert("success", '{% trans "Conglatulations. Your vote has been sent" %}');
-                        })
-                        .catch(error => {
-                            this.showAlert("danger", '{% trans "Error: " %}' + error);
-                        });
+                    
                 },
                 getUser(evt) {
                     var data = {token: this.token};
@@ -190,12 +177,12 @@
                     
                     var data = {
                         userId: this.user.id,
-                        //group_to_join: this.selected,
+                        group_to_join: this.selected,
                         token: this.token
                     }
                     this.postData("{% url "gateway" "census" "/" %}", data)
                         .then(data => {
-                            this.showAlert("success", '{% trans "Congratulations. You are in the group!" %}');
+                            this.showAlert("success", '{% trans "Congratulations. Now you are in the group!" %}');
                         })
                         .catch(error => {
                             this.showAlert("danger", '{% trans "Error: " %}' + error);

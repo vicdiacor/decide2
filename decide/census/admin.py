@@ -23,8 +23,10 @@ def accept(modeladmin, request, queryset):
 
 def reject(modeladmin, request, queryset):
     for v in queryset.all():
-        v.status = Request.REJECTED        
-        v.save()
+        group = ParentGroup.objects.get(pk=v.group_id)
+        if v.status == 'PENDING' and group.isPublic == False:
+            v.status = Request.REJECTED        
+            v.save()
 
 class RequestAdmin(admin.ModelAdmin):
     list_display = ('voter_id', 'group_id', 'request_status')

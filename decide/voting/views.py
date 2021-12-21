@@ -23,7 +23,7 @@ class VotingView(generics.ListCreateAPIView):
     queryset = Voting.objects.all()
     serializer_class = VotingSerializer
     filter_backends = (django_filters.rest_framework.DjangoFilterBackend,)
-    filter_fields = ('id', )
+    filter_fields = ('id',  )
 
     def get(self, request, *args, **kwargs):
         version = request.version

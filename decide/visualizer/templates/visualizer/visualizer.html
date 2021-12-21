@@ -2,65 +2,148 @@
 {% load i18n static %}
 
 {% block extrahead %}
-    <link type="text/css" rel="stylesheet"
-         href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css" />
-    <link type="text/css" rel="stylesheet"
-         href="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css" />
-    <link type="text/css" rel="stylesheet" href="{% static "booth/style.css" %}" />
+<link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap/dist/css/bootstrap.min.css" />
+<link type="text/css" rel="stylesheet" href="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.css" />
+<link type="text/css" rel="stylesheet" href="{% static " booth/style.css" %}" />
 {% endblock %}
 
 {% block content %}
-    <div id="app-visualizer">
-        <!-- Navbar -->
-        <b-navbar type="dark" variant="secondary">
-            <b-navbar-brand tag="h1">Decide</b-navbar-brand>
-        </b-navbar>
+<div id="app-visualizer">
+    <!-- Navbar -->
+    <b-navbar type="dark" variant="secondary">
+        <b-navbar-brand tag="h1">Decide</b-navbar-brand>
+    </b-navbar>
 
-        <div class="voting container">
-            <h1>[[ voting.id ]] - [[ voting.name ]]</h1>
+    <div class="voting container" width="50%">
+        <h1>[[ voting.id ]] - [[ voting.name ]]</h1>
+        <h2 v-if="!voting.start_date">Votación no comenzada</h2>
+        <h2 v-else-if="!voting.end_date">Votación en curso</h2>
+        <div v-else>
+            <h2 class="heading">Estadísticas:</h2>
 
-            <h2 v-if="!voting.start_date">Votación no comenzada</h2>
-            <h2 v-else-if="!voting.end_date">Votación en curso</h2>
-            <div v-else>
-                <h2 class="heading">Resultados:</h2>
-
-                <table class="table table-bordered table-striped">
-                    <thead>
-                        <tr>
-                            <th>Opción</th>
-                            <th>Puntuación</th>
-                            <th>Votos</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="opt in voting.postproc" :key="opt.number">
-                            <th>[[opt.option]]</th>
-                            <td>[[opt.postproc]]</td>
-                            <td class="text-muted">[[opt.votes]]</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Valor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in statistics %}
+                    <tr>
+                        <th>{{data.name}}</th>
+                        <td>{{data.value}}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div id="buttons" style="padding-top: 2px;"></div>
+            <div id="canvas"></div>
         </div>
     </div>
+</div>
 {% endblock %}
 
 {% block extrabody %}
-    <!-- Vuejs -->
-    <script src="https://unpkg.com/vue"></script>
-    <script src="https://unpkg.com/babel-polyfill@latest/dist/polyfill.min.js"></script>
-    <script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
+<!-- Vuejs -->
+<script src="https://unpkg.com/vue"></script>
+<script src="https://unpkg.com/babel-polyfill@latest/dist/polyfill.min.js"></script>
+<script src="https://unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.js"></script>
 
-    <script>
-        var voting = {{voting|safe}};
-        var app = new Vue({
-            delimiters: ['[[', ']]'],
-            el: '#app-visualizer',
+<script>
+    var voting = {{ voting| safe}};
+    var app = new Vue({
+        delimiters: ['[[', ']]'],
+        el: '#app-visualizer',
+        data: {
+            voting: voting
+        }
+    })
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    var voting = {{ voting| safe}};
+    var labels = []
+    voting.postproc.forEach(function add(option) { labels.push(option.option)})
+    var data = []
+    voting.postproc.forEach(function add(option) { data.push(option.postproc)})
+    //labels.push('nuevo') // Para probar que aunque haya más valores se siguen viendo bien los colores
+    //data.push(10)
+    background = []
+    border = []
+    backgroundColor = [
+        'rgba(255, 99, 132, 0.2)',
+        'rgba(54, 162, 235, 0.2)',
+        'rgba(255, 206, 86, 0.2)',
+        'rgba(75, 192, 192, 0.2)',
+        'rgba(153, 102, 255, 0.2)',
+        'rgba(255, 159, 64, 0.2)'
+    ]
+    borderColor = [
+        'rgba(255,99,132,1)',
+        'rgba(54, 162, 235, 1)',
+        'rgba(255, 206, 86, 1)',
+        'rgba(75, 192, 192, 1)',
+        'rgba(153, 102, 255, 1)',
+        'rgba(255, 159, 64, 1)'
+    ]
+    var i = 0
+    for(const element in labels){
+        background.push(backgroundColor[i%backgroundColor['length']])
+        border.push(borderColor[i%backgroundColor['length']])
+        i = i + 1
+    }
+
+    const datasets = [{
+        label: 'Number of Votes',
+        data: data,
+        backgroundColor: background,
+        borderColor: border,
+        borderWidth: 1,
+    }]
+
+    const types = ['bar', 'doughnut', 'pie', 'polarArea']
+    // Crear botones
+    for(const type in types){
+        button = document.createElement('button')
+        button.setAttribute('onclick', 'changeChart("' + types[type] + '")')
+        button.setAttribute('class', 'btn btn-info')
+        button.setAttribute('style', 'margin-right: 2px; width: 10%;')
+        button.appendChild(document.createTextNode(types[type]))
+        // button = '<button onclick="changeChart(' + type + ')" class="btn btn-info" style="margin-right: 2px;">' + type + '</button>'
+        document.getElementById('buttons').appendChild(button)
+    }
+
+    var myChart
+    
+    function createChart(type) {
+        c = document.createElement('canvas')
+        c.setAttribute('id', 'myChart')
+        document.getElementById('canvas').appendChild(c)
+        var ctx = document.getElementById('myChart').getContext('2d');
+        myChart = new Chart(ctx, {
+            type: type,
             data: {
-                voting: voting
+                labels: labels,
+                datasets: datasets
+            },
+            options: {
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true
+                        }
+                    }]
+                }
             }
-        })
-    </script>
+        });
+    }
+    createChart('bar')
+
+    function changeChart(type) {
+        document.getElementById('myChart').remove()
+        createChart(type)
+    }
+</script>
 </body>
 {% endblock %}

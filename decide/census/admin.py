@@ -20,6 +20,10 @@ def accept(modeladmin, request, queryset):
             group.voters.add(voter)
             v.status = Request.ACCEPTED        
             v.save()
+            pending_groups = Request.objects.filter(status='PENDING', voter_id=v.voter_id, group_id=v.group_id)
+            for pend_group in pending_groups:
+                pend_group.delete()
+
 
 def reject(modeladmin, request, queryset):
     for v in queryset.all():
@@ -27,6 +31,9 @@ def reject(modeladmin, request, queryset):
         if v.status == 'PENDING' and group.isPublic == False:
             v.status = Request.REJECTED        
             v.save()
+            pending_groups = Request.objects.filter(status='PENDING', voter_id=v.voter_id, group_id=v.group_id)
+            for pend_group in pending_groups:
+                pend_group.delete()
 
 class RequestAdmin(admin.ModelAdmin):
     list_display = ('voter_id', 'group_id', 'request_status')

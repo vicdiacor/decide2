@@ -4,7 +4,10 @@ from rest_framework.status import (
         HTTP_400_BAD_REQUEST,
         HTTP_401_UNAUTHORIZED
 )
+
 from rest_framework.views import APIView
+from rest_framework import generics, permissions
+from django.views.generic import TemplateView
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
 from django.db import IntegrityError
@@ -12,6 +15,8 @@ from django.shortcuts import get_object_or_404, render
 from django.core.exceptions import ObjectDoesNotExist
 
 from .serializers import UserSerializer
+from census.models import Census
+from voting.models import Voting
 
 from authentication.forms import *
 from authentication.import_and_export import * 
@@ -22,6 +27,7 @@ from django.http import HttpResponse
 import os
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
+import datetime
 
 
 class GetUserView(APIView):
@@ -133,3 +139,18 @@ def exportGroup(request):
             return resp
 
     return render(request, 'export_group.html', {'form': form})
+
+
+def UserVotings(request,voterId):
+    voter = User.objects.get(id=voterId)
+    cens = Census.objects.filter(voter_id=voterId).values_list('voting_id',flat=True)
+    votAbiertas = []
+    votCerradas = []
+    for i in cens:
+        fechaCierre = Voting.objects.get(id=i)
+        if (fechaCierre.end_date==None):
+            votAbiertas.append(i)
+        else:
+            votCerradas.append(i)
+    context = {'voter': voter,'total':cens, 'abiertas':votAbiertas, 'cerradas':votCerradas}        
+    return render(request,'view_voting.html',context)

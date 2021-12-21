@@ -52,7 +52,10 @@
 
             <!-- Groups -->
             <div v-if="!signup">
-                <h2> Perteneces a los siguientes grupos: XXXXXXXXXXXXXX </h2>
+                <h2> Perteneces a los siguientes grupos: </h2>
+                {% for i in groups %}
+                <h3> {{ i.name }} </h3>
+                {% endfor %}
                 <h2> Listado de grupos </h2>
                 <p> Aquí meter información de cada grupo, y a la derecha el siguiente formulario con el siguiente botón:</p>
 
@@ -150,6 +153,18 @@
                         .catch(error => {
                             this.showAlert("danger", '{% trans "Error: " %}' + error);
                         });
+                    var data = {
+                        list: True,
+                        user_id: this.user.id,
+                        token: this.token
+                    }
+                    this.postData("{% url "gateway" "census" "/groupList" %}", data)
+                        .then(data => {
+                            this.showAlert("success", '{% trans "Conglatulations. Your vote has been sent" %}');
+                        })
+                        .catch(error => {
+                            this.showAlert("danger", '{% trans "Error: " %}' + error);
+                        });
                 },
                 getUser(evt) {
                     var data = {token: this.token};
@@ -180,7 +195,7 @@
                     }
                     this.postData("{% url "gateway" "census" "/" %}", data)
                         .then(data => {
-                            this.showAlert("success", '{% trans "Conglatulations. You are in the group!" %}');
+                            this.showAlert("success", '{% trans "Congratulations. You are in the group!" %}');
                         })
                         .catch(error => {
                             this.showAlert("danger", '{% trans "Error: " %}' + error);

@@ -162,13 +162,39 @@ class GroupOperations():
 
 
 # TODO: check permissions and census
-class ListGroupsView(TemplateView):
+class GroupsView(TemplateView):
     template_name = 'groupList.html'
+
+    def post(self, request):
+        if request.data.get('list')==True:
+            user = User.objects.filter(request.data.get('user_id'))
+            groups_user = ParentGroup.objects.filter(voters=user)
+            groups = ParentGroup.objects.exclude(voters=user)
+            
+            context['groups_user'] = groups_user
+            context['groups'] = groups
+        elif request.data.get('add')==True:
+            #Obtener grupo
+            user = User.objects.filter(request.data.get('user_id'))
+            group = ParentGroup.objects.filter(request.data.get('group_id'))
+            #Grupo publico
+            if group.isPublic==True:
+                group.add(user)
+                group.save()
+            #Grupo privado
+            else:
+                request = Request(voter_id=user.id, group_id=group.id)
+                request.save()
+        return context
+
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-            
-
         context['KEYBITS'] = settings.KEYBITS
         
+        #user = self.request('user_id')
+        #group = ParentGroup.objects.filter(voters=user)
+        
+        #context['groups'] = group
+        #print(ParentGroup.objects.all())
         return context

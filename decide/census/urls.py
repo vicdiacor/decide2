@@ -1,6 +1,6 @@
 from django.urls import path, include
 from . import views
-from .views import ListGroupsView
+from .views import GroupsView
 
 
 urlpatterns = [
@@ -11,5 +11,5 @@ urlpatterns = [
          name='group_intersection'),
     path('difference', views.GroupOperations.GroupDifference.as_view(),
          name='group_difference'),
-     path('groupList', ListGroupsView.as_view())
+     path('groupList', GroupsView.as_view())
 ]

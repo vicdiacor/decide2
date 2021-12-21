@@ -188,7 +188,7 @@ def voting_admin_notification(request):
         'votings': votings
     }
 
-    return render(request, 'list_admin_notifications.html', data)
+    return render(request, 'list_admin_notifications.html', data, {'STATIC_URL':settings.STATIC_URL})
 
 def voting_user_notification(request):
 
@@ -200,7 +200,7 @@ def voting_user_notification(request):
         'votings': votings_by_user(votings,groups_by_user)
     }
 
-    return render(request, 'list_user_notifications.html', data )
+    return render(request, 'list_user_notifications.html', data, {'STATIC_URL':settings.STATIC_URL} )
 
 def votings_by_user(votings,groups_by_user):
     votings_list = []

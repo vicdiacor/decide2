@@ -41,13 +41,12 @@ class CensusCreate(generics.ListCreateAPIView):
                 # Añadir usuario al grupo 
                 if group!=None and user!= None and not userIsInTheGroup: #Comprobar también que el usuario no está ya en el grupo....
                     if group.isPublic:
-                        print("El grupo es publico")
+                        
                         user.groups.add(group)
-                        print("Usuario añadido al grupo ")
+                        
                         return Response({})
                 #Grupo privado o en el que ya está el usuario
                 else:
-                    print("No puedes unirte a este grupo privado o en el que ya estás")
                     return Response({}, status=status.HTTP_401_UNAUTHORIZED)
             except:
                 return Response({}, status=status.HTTP_401_UNAUTHORIZED)

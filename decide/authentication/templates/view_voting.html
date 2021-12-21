@@ -50,7 +50,15 @@
 
             <!-- Voting -->
             <div v-if="!signup">
-            </ul> El usuario {{voter}} tiene {{abiertas|length}} votaciones abiertas y {{cerradas|length}} cerradas. 
+            </ul> El usuario {{voter}} tiene {{abiertas|length}} votaciones abiertas, {{cerradas|length}} cerradas y {{pendientes|length}} votaciones esperando a comenzar
+            <p>Votaciones que aún no han comenzado:</p>
+            <ul> 
+                {% for vot in pendientes %} 
+                <li>Votación {{vot}}</li>
+                {% endfor %} 
+            </ul>
+            
+            
             <p>Votaciones abiertas:</p>
             <ul> 
                 {% for vot in abiertas %} 

@@ -146,11 +146,14 @@ def UserVotings(request,voterId):
     cens = Census.objects.filter(voter_id=voterId).values_list('voting_id',flat=True)
     votAbiertas = []
     votCerradas = []
+    votPendientes = []
     for i in cens:
-        fechaCierre = Voting.objects.get(id=i)
-        if (fechaCierre.end_date==None):
+        votacion = Voting.objects.get(id=i)
+        if (votacion.start_date==None):
+            votPendientes.append(i)
+        elif(votacion.end_date==None):
             votAbiertas.append(i)
         else:
             votCerradas.append(i)
-    context = {'voter': voter,'total':cens, 'abiertas':votAbiertas, 'cerradas':votCerradas}        
+    context = {'voter': voter,'total':cens, 'abiertas':votAbiertas, 'cerradas':votCerradas,'pendientes':votPendientes}        
     return render(request,'view_voting.html',context)

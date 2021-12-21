@@ -23,7 +23,7 @@ class VotingView(generics.ListCreateAPIView):
     queryset = Voting.objects.all()
     serializer_class = VotingSerializer
     filter_backends = (django_filters.rest_framework.DjangoFilterBackend,)
-    filter_fields = ('id', )
+    filter_fields = ('id',  )
 
     def get(self, request, *args, **kwargs):
         version = request.version
@@ -58,8 +58,13 @@ class VotingView(generics.ListCreateAPIView):
                 except:
                     return Response({}, status=status.HTTP_400_BAD_REQUEST)
 
+        #Creación de la pregunta
+        question_type= request.data.get('question_type')
 
-        question = Question(desc=request.data.get('question'))
+        if (question_type!='' and question_type!=None and question_type!= 'SO' and  question_type!='MC'):
+            return Response({}, status=status.HTTP_400_BAD_REQUEST)
+            
+        question = Question(desc=request.data.get('question'),type= question_type if (question_type!='' and question_type!=None) else 'SO' )
         question.save()
         for idx, q_opt in enumerate(request.data.get('question_opt')):
             opt = QuestionOption(question=question, option=q_opt, number=idx)
@@ -111,7 +116,7 @@ class VotingUpdate(generics.RetrieveUpdateDestroyAPIView):
         action = request.data.get('action')
         if not action:
             return Response({}, status=status.HTTP_400_BAD_REQUEST)
-
+        
         voting = get_object_or_404(Voting, pk=voting_id)
         msg = ''
         st = status.HTTP_200_OK

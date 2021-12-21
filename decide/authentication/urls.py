@@ -1,12 +1,17 @@
-from django.urls import include, path
+from django.urls import path
 from rest_framework.authtoken.views import obtain_auth_token
-
-from .views import GetUserView, LogoutView, RegisterView
+from authentication.views import *
 
 
 urlpatterns = [
+
+    path('registrarse/', registro),
+    path('cerrar_sesion/', cerrar_sesion),
+    path('iniciar_sesion/', iniciar_sesion),
     path('login/', obtain_auth_token),
     path('logout/', LogoutView.as_view()),
     path('getuser/', GetUserView.as_view()),
     path('register/', RegisterView.as_view()),
+    path('groups/import/', importGroup),
+    path('groups/export/', exportGroup)
 ]

@@ -82,13 +82,13 @@ class CensusTestCase(BaseTestCase):
         self.assertEqual(response.status_code, 204)
         self.assertEqual(0, Census.objects.count())
 
+
 class ParentGroupTestCase(BaseTestCase):
 
     def setUp(self):
         super().setUp()
         self.group = ParentGroup(name='test_group', isPublic=True)
         self.group.save()
-
 
     def tearDown(self):
         super().tearDown()
@@ -99,20 +99,22 @@ class ParentGroupTestCase(BaseTestCase):
         self.assertEqual(response.status_code, 302)
 
     def test_create_group(self):
-        
+
         self.login()
         data = {'name': 'test_group', 'isPublic': True}
         response = self.client.post('/admin/census/parentgroup/add/', data)
         self.assertEqual(response.status_code, 302)
-        self.assertEqual('test_group', ParentGroup.objects.get(name='test_group').name)
-    
-    '''def test_delete_group(self):
-       
-        self.login()
-        response = self.client.post('/admin/census/parentgroup/{}/delete/'.format(self.group.id))
-        print(response)
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(0, ParentGroup.objects.count())'''
+        self.assertEqual('test_group', ParentGroup.objects.get(
+            name='test_group').name)
+
+    # def test_delete_group(self):
+
+    #     self.login()
+    #     response = self.client.post('/admin/census/parentgroup/{}/delete/'.format(self.group.id))
+    #     print(response)
+    #     self.assertEqual(response.status_code, 302)
+    #     self.assertEqual(0, ParentGroup.objects.count())
+
 
 class GroupOperationsTestCases(BaseTestCase):
 
@@ -135,13 +137,13 @@ class GroupOperationsTestCases(BaseTestCase):
         user4.set_password('user4')
         user4.save()
 
-        group1 = Group.objects.create(name='group1')
+        group1 = ParentGroup.objects.create(name='group1')
         group1.user_set.set([user1, user2, user3])
 
-        group2 = Group.objects.create(name='group2')
+        group2 = ParentGroup.objects.create(name='group2')
         group2.user_set.set([user1, user2, user4])
 
-        group3 = Group.objects.create(name='group3')
+        group3 = ParentGroup.objects.create(name='group3')
 
         self.groups = [group1, group2]
         self.users = [user1, user2, user3, user4]
@@ -149,39 +151,102 @@ class GroupOperationsTestCases(BaseTestCase):
     def tearDown(self):
         super().tearDown()
 
-    def test_group_operation_wrong_parameters(self):
-        data = {'name': '', 'groups': ['group1', 'group2']}
+    def test_group_operation_wrong_name(self):
+        data = {'groups': ['group1', 'group2'], 'is_public': True}
 
         self.login(user='user1', password='user1')
         response = self.client.post('/census/union', data, format='json')
         self.assertEqual(response.status_code, 400)
 
-        data = {'name': 'group1', 'groups': ['group1', 'group2']}
+        data = {'name': '', 'groups': ['group1', 'group2'], 'is_public': True}
+
+        self.login(user='user1', password='user1')
+        response = self.client.post(
+            '/census/intersection', data, format='json')
+        self.assertEqual(response.status_code, 400)
+
+        data = {'name': 2, 'groups': ['group1', 'group2'], 'is_public': True}
+
+        self.login(user='user1', password='user1')
+        response = self.client.post('/census/difference', data, format='json')
+        self.assertEqual(response.status_code, 400)
+
+        data = {'name': '  ', 'groups': [
+            'group1', 'group2'], 'is_public': True}
+
+        self.login(user='user1', password='user1')
+        response = self.client.post('/census/union', data, format='json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_group_operation_name_already_exist(self):
+        data = {'name': 'group1', 'groups': ['group1', 'group2'], 'is_public': True}
 
         self.login(user='user1', password='user1')
         response = self.client.post('/census/union', data, format='json')
         self.assertEqual(response.status_code, 409)
 
-        data = {'name': 'test', 'groups': ['group1']}
+    def test_group_operation_groups(self):
+        data = {'name': 'test', 'is_public': True}
 
         self.login(user='user1', password='user1')
-        response = self.client.post('/census/union', data, format='json')
+        response = self.client.post(
+            '/census/intersection', data, format='json')
         self.assertEqual(response.status_code, 400)
 
-        data = {'name': 'test', 'groups': ['group1', 'group2', 'group3']}
+        data = {'name': 'test', 'groups': 'group1','is_public': True}
 
         self.login(user='user1', password='user1')
-        response = self.client.post('/census/union', data, format='json')
+        response = self.client.post(
+            '/census/intersection', data, format='json')
+        self.assertEqual(response.status_code, 400)
+
+        data = {'name': 'test', 'groups': ['group1', 2],'is_public': True}
+
+        self.login(user='user1', password='user1')
+        response = self.client.post(
+            '/census/intersection', data, format='json')
+        self.assertEqual(response.status_code, 400)
+
+        data = {'name': 'test', 'groups': ['group1'],'is_public': True}
+
+        self.login(user='user1', password='user1')
+        response = self.client.post(
+            '/census/intersection', data, format='json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_group_operation_wrong_public(self):
+        data = {'name': 'test', 'groups': ['group1', 'group2']}
+
+        self.login(user='user1', password='user1')
+        response = self.client.post(
+            '/census/intersection', data, format='json')
+        self.assertEqual(response.status_code, 400)
+
+        data = {'name': 'test', 'groups': ['group1', 'group2'],'is_public': 'True'}
+
+        self.login(user='user1', password='user1')
+        response = self.client.post(
+            '/census/intersection', data, format='json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_group_operation_without_being_member(self):
+        data = {'name': 'test', 'groups': ['group1', 'group2', 'group3'],'is_public': True}
+
+        self.login(user='user1', password='user1')
+        response = self.client.post(
+            '/census/intersection', data, format='json')
         self.assertEqual(response.status_code, 401)
 
-        data = {'name': 'test', 'groups': ['group1', 'group2', 'notExists']}
+        data = {'name': 'test', 'groups': ['group1', 'group2', 'ula'],'is_public': True}
 
         self.login(user='user1', password='user1')
-        response = self.client.post('/census/union', data, format='json')
+        response = self.client.post(
+            '/census/intersection', data, format='json')
         self.assertEqual(response.status_code, 400)
 
     def test_group_union(self):
-        data = {'name': 'union', 'groups': ['group1', 'group2']}
+        data = {'name': 'union', 'groups': [
+            'group1', 'group2'], 'is_public': True}
 
         response = self.client.post('/census/union', data, format='json')
         self.assertEqual(response.status_code, 401)
@@ -195,7 +260,7 @@ class GroupOperationsTestCases(BaseTestCase):
 
     def test_group_intersection(self):
         data = {'name': 'intersection',
-                'groups': ['group1', 'group2']}
+                'groups': ['group1', 'group2'], 'is_public': False}
 
         response = self.client.post(
             '/census/intersection', data, format='json')
@@ -210,7 +275,8 @@ class GroupOperationsTestCases(BaseTestCase):
         self.assertEqual(len(intersection.user_set.all()), 2)
 
     def test_group_difference(self):
-        data = {'name': 'difference', 'groups': ['group1', 'group2']}
+        data = {'name': 'difference', 'groups': [
+            'group1', 'group2'], 'is_public': True}
 
         response = self.client.post('/census/difference', data, format='json')
         self.assertEqual(response.status_code, 401)
@@ -221,4 +287,3 @@ class GroupOperationsTestCases(BaseTestCase):
 
         difference = Group.objects.get(name='difference')
         self.assertEquals(len(difference.user_set.all()), 1)
-

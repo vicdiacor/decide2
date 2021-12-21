@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import Group, User
-from enum import Enum
 
 class Census(models.Model):
     voting_id = models.PositiveIntegerField()
@@ -12,7 +11,7 @@ class Census(models.Model):
 
 class ParentGroup(Group):
     isPublic = models.BooleanField(default=False)
-    voters = models.ManyToManyField(User)
+    voters = models.ManyToManyField(User, blank=True)
 
 class Request(models.Model):
     ACCEPTED = 'ACCEPTED' 

@@ -1,3 +1,6 @@
+from django.shortcuts import render, redirect
+from decide import settings
+
 from rest_framework.response import Response
 from rest_framework.status import (
         HTTP_201_CREATED,
@@ -12,16 +15,58 @@ from django.shortcuts import get_object_or_404, render
 from django.core.exceptions import ObjectDoesNotExist
 
 from .serializers import UserSerializer
+from django.contrib.auth.forms import AuthenticationForm
 
+from authentication.forms import SignUpForm
+from django.contrib.auth import login, authenticate, logout
 from authentication.forms import *
 from authentication.import_and_export import * 
 from django.contrib import messages
-from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponse
 
 import os
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
+
+def registro(request):
+    if request.method == 'POST':
+        form = SignUpForm(request.POST)
+        if form.is_valid():
+            form.save()
+            username = form.cleaned_data.get('username')
+            raw_password = form.cleaned_data.get('password1')
+            user = authenticate(request, username=username, password=raw_password)
+            login(request, user)
+
+            return redirect(inicio)
+    else:
+        form = SignUpForm()
+    return render(request, 'signup.html', {'form': form, 'STATIC_URL':settings.STATIC_URL})    
+
+def inicio(request):
+    return render(request, 'inicio.html', {'STATIC_URL':settings.STATIC_URL})
+
+def cerrar_sesion(request):
+    logout(request)
+    return render(request, 'inicio.html', {'STATIC_URL':settings.STATIC_URL})
+
+
+def iniciar_sesion(request):
+    if request.method == "POST":
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            username=form.cleaned_data.get('username')
+            password=form.cleaned_data.get('password')
+            user=authenticate(request, username=username,password=password)
+            
+            if user is not None:
+                login(request, user)
+                
+                return redirect(inicio)
+    
+    else:
+        form=AuthenticationForm()
+    return render(request, 'signin.html', {'form': form, 'STATIC_URL':settings.STATIC_URL})    
 
 
 class GetUserView(APIView):
@@ -94,7 +139,7 @@ def importGroup(request):
                 users_list = readTxtFile(file)
             else:
                 messages.error(request, "Formato de archivo no válido.")
-                return render(request, 'import_group.html', {'form': form})
+                return render(request, 'import_group.html', {'form': form, 'STATIC_URL':settings.STATIC_URL})
 
             # Si todos los usuarios existen, creo el grupo y añado todos los usuarios de la lista
             if (users_list != None):
@@ -107,7 +152,7 @@ def importGroup(request):
             else:
                 messages.error(request, "Uno de los usuarios indicados no existe.")
 
-    return render(request, 'import_group.html', {'form': form})
+    return render(request, 'import_group.html', {'form': form, 'STATIC_URL':settings.STATIC_URL})
         
 
 
@@ -132,4 +177,4 @@ def exportGroup(request):
             resp['Content-Disposition'] = 'attachment; filename=export_group.xlsx'
             return resp
 
-    return render(request, 'export_group.html', {'form': form})
+    return render(request, 'export_group.html', {'form': form, 'STATIC_URL':settings.STATIC_URL})

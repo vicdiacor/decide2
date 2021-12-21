@@ -19,7 +19,7 @@ from rest_framework.status import (
 )
 
 from base.perms import UserIsStaff
-from .models import Census, ParentGroup
+from .models import Census, ParentGroup, Request
 
 group_successfully_created = "Group successfully created"
 
@@ -45,7 +45,13 @@ class CensusCreate(generics.ListCreateAPIView):
                         user.groups.add(group)
                         
                         return Response({})
-                #Grupo privado o en el que ya está el usuario
+                    elif group.isPublic == False:
+                        print("Se ha metido ;)")
+                        request = Request(voter_id=id_user, group_id=id_group)
+                        request.save()
+                        return Response({})
+
+                #Grupo en el que ya está el usuario
                 else:
                     return Response({}, status=status.HTTP_401_UNAUTHORIZED)
             except:

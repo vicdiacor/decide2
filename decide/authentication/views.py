@@ -29,6 +29,7 @@ from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 
 from voting.models import Voting
+from census.models import Census
 
 def registro(request):
     if request.method == 'POST':
@@ -188,24 +189,40 @@ def voting_admin_notification(request):
         'votings': votings
     }
 
-    return render(request, 'list_admin_notifications.html', data, {'STATIC_URL':settings.STATIC_URL})
+    return render(request, 'list_admin_notifications.html', data)
 
 def voting_user_notification(request):
-
+    census = Census.objects.all()
     votings= Voting.objects.all()
-    groups = request.user.groups.values_list('id',flat = True)
-    groups_by_user = list(groups)
+    user_id = request.user.id
+    census_voting_id = list(census.values_list('voting_id',flat = True))
+    census_voter_id = list(census.values_list('voter_id',flat = True))
+    id_list = dict_census(census_voting_id, census_voter_id, user_id)
 
     data = {
-        'votings': votings_by_user(votings,groups_by_user)
+        'votings': get_votings_by_id(id_list, votings),
+        'census_voter_id': census_voter_id,
+        'census_voting_id': census_voting_id,
+        'census_dict': dict_census(census_voting_id, census_voter_id, user_id),
+        'users': user_id
     }
 
-    return render(request, 'list_user_notifications.html', data, {'STATIC_URL':settings.STATIC_URL} )
+    return render(request, 'list_user_notifications.html', data)
 
-def votings_by_user(votings,groups_by_user):
-    votings_list = []
+def dict_census(census_voting_id, census_voter_id, user_id):
+    census_zip = list(zip(census_voting_id, census_voter_id))
+    votings_id_list = []
+    for i in range(len(census_zip)):
+        if census_zip[i][1] == user_id:
+            votings_id_list.append(census_zip[i][0])
+    return votings_id_list
+
+def get_votings_by_id(id_list, votings):
+    votings_list=[]
     for v in votings:
-        if int(v.groups) in groups_by_user:
+        if v.id in id_list:
             votings_list.append(v)
     return votings_list
+            
+
     

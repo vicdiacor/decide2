@@ -4,6 +4,15 @@
 <html lang='es'>
   <head>
     <title>Sistema de votación DECIDE</title>
+    <style>
+        .error { 
+        color:red 
+        }
+
+        .success {
+        color:green
+        }
+    </style>
 	<meta charset='utf-8'>
 		<link rel="stylesheet" href="{{STATIC_URL}}css/uikit.min.css" />
         <script src="{{STATIC_URL}}js/jquery.min.js"></script>
@@ -32,6 +41,8 @@
             <li><a href="/authentication/registrarse">Regístrate</a></li>
             <li><a href="/authentication/iniciar_sesion">Iniciar sesión</a></li>
         {% endif %}
+            <li><a href='/authentication/groups/import'>Importar grupo desde Excel.</a></li>
+            <li><a href='/authentication/groups/export'>Exportar miembros de un grupo a Excel.</a></li>
         </ul>
 
     </div>

@@ -111,8 +111,6 @@ class RegisterView(APIView):
             return Response({}, status=HTTP_400_BAD_REQUEST)
         return Response({'user_pk': user.pk, 'token': token.key}, HTTP_201_CREATED)
 
-
-
 ### Importar/Exportar
 
 
@@ -141,7 +139,7 @@ def importGroup(request):
                 users_list = readTxtFile(file)
             else:
                 messages.error(request, "Formato de archivo no válido.")
-                return render(request, 'import_group.html', {'form': form})
+                return render(request, 'import_group.html', {'form': form, 'STATIC_URL':settings.STATIC_URL})
 
             # Si todos los usuarios existen, creo el grupo y añado todos los usuarios de la lista
             if (users_list != None):
@@ -154,7 +152,7 @@ def importGroup(request):
             else:
                 messages.error(request, "Uno de los usuarios indicados no existe.")
 
-    return render(request, 'import_group.html', {'form': form})
+    return render(request, 'import_group.html', {'form': form, 'STATIC_URL':settings.STATIC_URL})
         
 
 
@@ -179,7 +177,8 @@ def exportGroup(request):
             resp['Content-Disposition'] = 'attachment; filename=export_group.xlsx'
             return resp
 
-    return render(request, 'export_group.html', {'form': form})
+    return render(request, 'export_group.html', {'form': form, 'STATIC_URL':settings.STATIC_URL})
+
 
 def voting_admin_notification(request):
 
@@ -196,17 +195,17 @@ def voting_user_notification(request):
     votings= Voting.objects.all()
     groups = request.user.groups.values_list('id',flat = True)
     groups_by_user = list(groups)
-    votings_list = []
-    votings_by_user = []
-    for v in votings:
-        votings_list.append(v.groups)
-        for vo in votings_list:
-            for g in groups_by_user:
-                if str(vo) == str(g):
-                    votings_by_user.append(v)
+
     data = {
-        'votings': votings_by_user,
-        'groups': groups_by_user
+        'votings': votings_by_user(votings,groups_by_user)
     }
 
     return render(request, 'list_user_notifications.html', data )
+
+def votings_by_user(votings,groups_by_user):
+    votings_list = []
+    for v in votings:
+        if int(v.groups) in groups_by_user:
+            votings_list.append(v)
+    return votings_list
+    

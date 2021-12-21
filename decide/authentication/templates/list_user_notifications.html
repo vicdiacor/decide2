@@ -1,13 +1,12 @@
 {% extends 'master.html' %}
 
-
-
-
-
-{% block contenido %} 
-
-
+{% block titulo %}
 <h1>Notificaciones para {{request.user}}</h1>
+{%endblock%}
+
+
+{% block contenido %}
+
 <table>
 	<h2>Nuevas votaciones	</h2>
 	<tr>

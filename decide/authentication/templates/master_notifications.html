@@ -1,5 +1,3 @@
-{% load static %} 
-
 <!DOCTYPE html>
 <html lang='es'>
   <head>
@@ -14,9 +12,9 @@
         }
     </style>
 	<meta charset='utf-8'>
-		<link rel="stylesheet" href="{% static "css/uikit.min.css" %}" />
-        <script src="{% static "js/jquery.min.js" %}"></script>
-        <script src="{% static "js/uikit.min.js" %}"></script>
+		<link rel="stylesheet" href="/static/css/uikit.min.css" />
+        <script src="/static/js/jquery.min.js"></script>
+        <script src="/static/js/uikit.min.js"></script>
         <link href="/static/css/style.css" rel="stylesheet" type="text/css">
   </head>
   <body>
@@ -31,17 +29,14 @@
 
             </li>
 
-        {% if user.is_authenticated %}
-            <li><a>Sesión iniciada de {{user.username }}</a></li>
+        
+            <li><a>Sesión iniciada de egc</a></li>
             <li><a href="/authentication/cerrar_sesion">Cerrar sesión</a></li>
             {% if user.is_staff %}
             <li><a href="/authentication/notifications_admin">Notificaciones ADMIN</a></li>
             {% endif %}
             <li><a href="/authentication/notifications">Notificaciones</a></li>
-        {%else %}
-            <li><a href="/authentication/registrarse">Regístrate</a></li>
-            <li><a href="/authentication/iniciar_sesion">Iniciar sesión</a></li>
-        {% endif %}
+        
             <li><a href='/authentication/groups/import'>Importar grupo desde Excel.</a></li>
             <li><a href='/authentication/groups/export'>Exportar miembros de un grupo a Excel.</a></li>
         </ul>
@@ -50,9 +45,5 @@
 </nav>
 	    
 		<hr>
- 		
- 		<h1 >{% block titulo %} {% endblock %}</h1>
 
-		{% block contenido %} {% endblock %}
-  </body>
-</html>
+        {% block contenido %} {% endblock %}

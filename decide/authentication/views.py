@@ -14,10 +14,10 @@ from rest_framework.views import APIView
 from rest_framework import generics, permissions
 from django.views.generic import TemplateView
 from rest_framework.authtoken.models import Token
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, render
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ViewDoesNotExist
 
 from .serializers import UserSerializer
 from django.contrib.auth.forms import AuthenticationForm
@@ -36,6 +36,9 @@ import os
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 import datetime
+
+from voting.models import Voting
+from census.models import Census
 
 def registro(request):
     if request.method == 'POST':
@@ -117,8 +120,6 @@ class RegisterView(APIView):
         except IntegrityError:
             return Response({}, status=HTTP_400_BAD_REQUEST)
         return Response({'user_pk': user.pk, 'token': token.key}, HTTP_201_CREATED)
-
-
 
 ### Importar/Exportar
 
@@ -206,3 +207,46 @@ def UserVotings(request,voterId):
     context = {'voter': voter,'total':cens, 'abiertas':votAbiertas, 'cerradas':votCerradas,'pendientes':votPendientes}        
     return render(request,'view_voting.html',context)
 
+
+def voting_admin_notification(request):
+
+    votings= Voting.objects.all()
+
+    data = {
+        'votings': votings
+    }
+
+    return render(request, 'list_admin_notifications.html', data)
+
+def voting_user_notification(request):
+    census = Census.objects.all()
+    votings= Voting.objects.all()
+    user_id = request.user.id
+    census_voting_id = list(census.values_list('voting_id',flat = True))
+    census_voter_id = list(census.values_list('voter_id',flat = True))
+    id_list = dict_census(census_voting_id, census_voter_id, user_id)
+
+    data = {
+        'votings': get_votings_by_id(id_list, votings),
+        'census_voter_id': census_voter_id,
+        'census_voting_id': census_voting_id,
+        'census_dict': dict_census(census_voting_id, census_voter_id, user_id),
+        'users': user_id
+    }
+
+    return render(request, 'list_user_notifications.html', data)
+
+def dict_census(census_voting_id, census_voter_id, user_id):
+    census_zip = list(zip(census_voting_id, census_voter_id))
+    votings_id_list = []
+    for i in range(len(census_zip)):
+        if census_zip[i][1] == user_id:
+            votings_id_list.append(census_zip[i][0])
+    return votings_id_list
+
+def get_votings_by_id(id_list, votings):
+    votings_list=[]
+    for v in votings:
+        if v.id in id_list:
+            votings_list.append(v)
+    return votings_list

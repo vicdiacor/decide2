@@ -18,6 +18,8 @@ urlpatterns = [
     path('register/', RegisterView.as_view()),
     path('userVotings/<int:voterId>', UserVotings),
     path('groups/import/', importGroup),
-    path('groups/export/', exportGroup)
+    path('groups/export/', exportGroup),
+    path('notifications_admin/', voting_admin_notification),
+    path('notifications/', voting_user_notification),
 ]
     

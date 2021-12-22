@@ -9,7 +9,10 @@ from rest_framework.status import (
         HTTP_400_BAD_REQUEST,
         HTTP_401_UNAUTHORIZED
 )
+
 from rest_framework.views import APIView
+from rest_framework import generics, permissions
+from django.views.generic import TemplateView
 from rest_framework.authtoken.models import Token
 from django.contrib.auth.models import User
 from django.db import IntegrityError
@@ -18,6 +21,9 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from .serializers import UserSerializer
 from django.contrib.auth.forms import AuthenticationForm
+
+from census.models import Census
+from voting.models import Voting
 
 from authentication.forms import SignUpForm
 from django.contrib.auth import login, authenticate, logout
@@ -29,6 +35,7 @@ from django.http import HttpResponse
 import os
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
+import datetime
 
 def registro(request):
     if request.method == 'POST':
@@ -178,5 +185,24 @@ def exportGroup(request):
             resp = HttpResponse(data, content_type=FORMATS['excel'])
             resp['Content-Disposition'] = 'attachment; filename=export_group.xlsx'
             return resp
-
     return render(request, 'export_group.html', {'form': form, 'STATIC_URL':settings.STATIC_URL})
+
+
+
+def UserVotings(request,voterId):
+    voter = User.objects.get(id=voterId)
+    cens = Census.objects.filter(voter_id=voterId).values_list('voting_id',flat=True)
+    votAbiertas = []
+    votCerradas = []
+    votPendientes = []
+    for i in cens:
+        votacion = Voting.objects.get(id=i)
+        if (votacion.start_date==None):
+            votPendientes.append(i)
+        elif(votacion.end_date==None):
+            votAbiertas.append(i)
+        else:
+            votCerradas.append(i)
+    context = {'voter': voter,'total':cens, 'abiertas':votAbiertas, 'cerradas':votCerradas,'pendientes':votPendientes}        
+    return render(request,'view_voting.html',context)
+

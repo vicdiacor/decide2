@@ -1,6 +1,10 @@
 from django.urls import path
 from rest_framework.authtoken.views import obtain_auth_token
+
 from authentication.views import *
+
+
+from .views import GetUserView, LogoutView, RegisterView, UserVotings, exportGroup, importGroup
 
 
 urlpatterns = [
@@ -12,6 +16,8 @@ urlpatterns = [
     path('logout/', LogoutView.as_view()),
     path('getuser/', GetUserView.as_view()),
     path('register/', RegisterView.as_view()),
+    path('userVotings/<int:voterId>', UserVotings),
     path('groups/import/', importGroup),
     path('groups/export/', exportGroup)
 ]
+    

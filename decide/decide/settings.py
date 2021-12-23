@@ -187,3 +187,9 @@ if os.path.exists("config.jsonnet"):
 
 
 INSTALLED_APPS = INSTALLED_APPS + MODULES
+
+EMAIL_USE_TLS = True  
+EMAIL_HOST = 'smtp.gmail.com'  
+EMAIL_HOST_USER = 'decidepartchullo@gmail.com'  
+EMAIL_HOST_PASSWORD = 'decide1234%'  
+EMAIL_PORT = 587  

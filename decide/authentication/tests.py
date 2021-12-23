@@ -404,7 +404,7 @@ class RegistrarUsuarioTestCase(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertContains(response, "<h2>Formulario de registro en DECIDE</h2>", html=True)
         
-        #Sin password2 --> Mirar en internet como comprobar error de form
+        #Sin password2 
         response=self.client.post("/authentication/registrarse/", data={"username": "testuser", "first_name": "testuser", "last_name": "testuser","email": "prueba@gmail.com","password1": "decide1234", "password2": "decide1235"})
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertContains(response, "<h2>Formulario de registro en DECIDE</h2>", html=True)
@@ -414,7 +414,7 @@ class RegistrarUsuarioTestCase(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertContains(response, "<h2>Formulario de registro en DECIDE</h2>", html=True)
         
-        #Usuario ya registrado --> Mirar en internet como comprobar error de form
+        #Usuario ya registrado 
         response=self.client.post("/authentication/registrarse/", data={"username": "testuser", "first_name": "testuser", "last_name": "testuser","email": "testuser@example.com","password1": "decide1234", "password2": "decide1234"})
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
         self.assertEqual(response["Location"], "/")

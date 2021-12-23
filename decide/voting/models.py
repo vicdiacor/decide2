@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.contrib.postgres.fields import JSONField
+from django.db.models.query_utils import DeferredAttribute
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.validators import validate_comma_separated_integer_list
@@ -9,13 +10,30 @@ from datetime import date
 from base import mods
 from base.models import Auth, Key
 from django.contrib.auth.models import User, Group
+from store.models import Vote
+
 
 
 class Question(models.Model):
+
+    SINGLE_OPTION = 'SO'
+    MULTIPLE_CHOICE = 'MC'
+    
+    TYPES_CHOICES = (
+        (SINGLE_OPTION, 'Single_Option'),
+        (MULTIPLE_CHOICE, 'Multiple_Choice'),
+        
+       
+    )
+    type = models.CharField(
+        max_length=2,
+        choices=TYPES_CHOICES,
+        default=SINGLE_OPTION,
+    )
     desc = models.TextField()
 
     def __str__(self):
-        return self.desc
+        return  '{}'.format(self.desc)
 
 
 class QuestionOption(models.Model):
@@ -90,6 +108,7 @@ class Voting(models.Model):
         # gettings votes from store
         votes = mods.get('store', params={
                          'voting_id': self.id}, HTTP_AUTHORIZATION='Token ' + token)
+
         # anon votes
         return [[i['a'], i['b']] for i in votes]
 
@@ -134,7 +153,7 @@ class Voting(models.Model):
         opts = []
         for opt in options:
             if isinstance(tally, list):
-                votes = tally.count(opt.number)
+                votes = tally.count(opt.number) #Recuento de votos
             else:
                 votes = 0
             opts.append({

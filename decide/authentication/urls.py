@@ -14,5 +14,5 @@ urlpatterns = [
     path('register/', RegisterView.as_view()),
     path('groups/import/', importGroup),
     path('groups/export/', exportGroup),
-    path('activar/<uidb64>/<token>', activate, name='activate'), 
+    path('activate/<uidb64>/<token>/', activate, name='activate'), 
 ]

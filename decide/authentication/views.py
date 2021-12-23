@@ -14,10 +14,8 @@ from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, render
 from django.core.exceptions import ObjectDoesNotExist
-from django.contrib.auth import get_user_model
 from .serializers import UserSerializer
 from django.contrib.auth.forms import AuthenticationForm
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode  
 from authentication.forms import SignUpForm
 from django.contrib.auth import login, authenticate, logout
 from authentication.forms import *
@@ -28,9 +26,9 @@ from django.template.loader import render_to_string
 import os
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
-from django.utils.encoding import force_bytes, force_text  
 from django.core.mail import EmailMessage  
 from .tokens import account_activation_token  
+import base64
 
 #Validación formulario y envío de email
 def inicio_registro(request):
@@ -46,7 +44,7 @@ def inicio_registro(request):
             message = render_to_string('acc_active_email.html', {  
                 'user': user,  
                 'domain': current_site.domain,  
-                'uid':urlsafe_base64_encode(force_bytes(user.pk)),  
+                'uid':base64.b64encode(bytes(str(user.pk), 'ascii')),
                 'token':account_activation_token.make_token(user),  
             })  
             
@@ -55,7 +53,7 @@ def inicio_registro(request):
                         mail_subject, message, to=[to_email]  
             )  
             email.send()  
-            mensaje="Por favor compruebe su correo electrónico y confirme el enlace para completar el registro."
+            mensaje="Por favor, compruebe su correo electrónico y confirme el enlace para completar el registro."
             return render(request, 'check_email.html', {'mensaje':mensaje,'STATIC_URL':settings.STATIC_URL})  
             # username = form.cleaned_data.get('username')
             # raw_password = form.cleaned_data.get('password1')
@@ -67,20 +65,23 @@ def inicio_registro(request):
         form = SignUpForm()
     return render(request, 'signup.html', {'form': form, 'STATIC_URL':settings.STATIC_URL})    
 
+
 #Validación email
-def activate(request,uidb64, token):  
-    User = get_user_model()  
-    try:  
-        uid = force_text(urlsafe_base64_decode(uidb64))  
-        user = User.objects.get(pk=uid)  
-    except(TypeError, ValueError, OverflowError, User.DoesNotExist):  
-        user = None  
-    if user is not None and account_activation_token.check_token(user, token):  
-        user.is_active = True  
-        user.save()  
-        return HttpResponse('Gracias por confirmar su cuenta. Ya puede iniciar sesión. Cierre esta pestaña.')  
-    else:  
-        return HttpResponse('Este enlace de confirmación es inválido.')          
+def activate(request,uidb64, token):   
+    #try:  
+    base64_bytes = uidb64.encode('ascii')
+    message_bytes = base64.b64decode(base64_bytes)
+    uid = message_bytes.decode('ascii')
+    
+    user = User.objects.get(username=int(uid))  
+    # except(TypeError, ValueError, OverflowError, User.DoesNotExist):  
+    #     user = None  
+    #if user is not None and account_activation_token.check_token(user, token):  
+    user.is_active = True  
+    user.save()  
+    return HttpResponse('Gracias por confirmar su cuenta. Ya puede iniciar sesión. Cierre esta pestaña.')  
+    #else:  
+        #return HttpResponse('Este enlace de confirmación no es válido.')          
 
 
 def inicio(request):

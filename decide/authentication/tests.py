@@ -3,7 +3,6 @@ from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
 
 from http import HTTPStatus
-
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 
@@ -17,7 +16,6 @@ from selenium.webdriver.support.ui import Select
 import os
 import time
 import openpyxl
-
 
 
 class AuthTestCase(APITestCase):
@@ -209,12 +207,14 @@ class SeleniumTestCase(SeleniumBaseTestCase):
         self.driver.find_element_by_xpath('//button["Registrarse"]').click()
         
         user = User.objects.get(username='testuser')
-        self.assertTrue(user.is_authenticated)
-        
-        self.driver.find_element(By.XPATH, '//a["Cerrar sesión"]')
-        user = auth.get_user(self.client)
-        self.assertFalse(user.is_authenticated)
-        
+
+        self.driver.get("https://mail.google.com/")
+        self.driver.find_element(By.ID, "identifierId").send_keys("decidepartchullo")
+        self.driver.find_element_by_xpath('//button["Siguiente"]').click()
+        self.driver.find_element(By.CLASS_NAME, "whsOnd zHQkBf").send_keys("decide1234%")
+        self.driver.find_element_by_xpath('//button["Siguiente"]').click()
+
+
         self.driver.get(f"{self.live_server_url}/authentication/iniciar_sesion/")
         self.driver.find_element(By.ID, "id_username").send_keys("testuser")
         self.driver.find_element(By.ID, "id_password").send_keys("decide1234")
@@ -247,11 +247,6 @@ class SeleniumTestCase(SeleniumBaseTestCase):
         self.driver.find_element_by_xpath('//button["Registrarse"]').click()
         
         user = User.objects.get(username='testuser')
-        self.assertTrue(user.is_authenticated)
-        
-        self.driver.find_element(By.XPATH, '//a["Cerrar sesión"]')
-        user = auth.get_user(self.client)
-        self.assertFalse(user.is_authenticated)
         
         self.driver.get(f"{self.live_server_url}/authentication/registrarse/")
         self.driver.find_element(By.ID, "id_username").send_keys("testuser")
@@ -342,7 +337,7 @@ class RegistrarUsuarioTestCase(TestCase):
     def tearDown(self):
         self.client = None
         
-    def test_good_registration(self):
+    def test_create_registration_inactive(self): #no puedo testear el momento de activación pues no puedo obtener el token que se envió 
         username_t="testuser"
         password_t="decide1234"
         try:
@@ -356,17 +351,41 @@ class RegistrarUsuarioTestCase(TestCase):
         response=self.client.get("/authentication/registrarse/")
         self.assertEqual(response.status_code, HTTPStatus.OK)
         
-        response=self.client.post("/authentication/registrarse/", data={"username": "testuser", "first_name": "testuser", "last_name": "testuser","email": "testuser@example.com","password1": "decide1234", "password2": "decide1234"})
-        self.assertEqual(response.status_code, HTTPStatus.FOUND)
-        self.assertEqual(response["Location"], "/")
+        response=self.client.post("/authentication/registrarse/", data={"username": username_t, "first_name": "testuser", "last_name": "testuser","email": "test@test.com","password1": password_t, "password2": password_t})
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertContains(response, "<h3>Por favor, compruebe su correo electrónico y confirme el enlace para completar el registro.</h3>", html=True)
         
         user = User.objects.get(username='testuser')
-        self.assertTrue(user.is_authenticated)
-        
-    def test_wrong_registration(self):
-        
+        self.assertFalse(user.is_active)
+    
+    def test_inicio_sesion_usuario_inactivo(self):
         username_t="testuser"
         password_t="decide1234"
+        try:
+            user = User.objects.get(username="testuser")
+            exists=True
+        except User.DoesNotExist:
+            exists=False
+        
+        self.assertFalse(exists)       
+        
+        response=self.client.get("/authentication/registrarse/")
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        
+        response=self.client.post("/authentication/registrarse/", data={"username": username_t, "first_name": "testuser", "last_name": "testuser","email": "test@test.com","password1": password_t, "password2": password_t})
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertContains(response, "<h3>Por favor, compruebe su correo electrónico y confirme el enlace para completar el registro.</h3>", html=True)
+        
+        user = User.objects.get(username='testuser')
+        self.assertFalse(user.is_active)
+        
+        response = self.client.post("/authentication/iniciar_sesion/", data={"username": username_t, "password": password_t})
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertContains(response, "Esta cuenta está inactiva.", html=True)
+        
+              
+    def test_wrong_registration(self):
+        
         try:
             user = User.objects.get(username="testuser")
             exists=True
@@ -414,13 +433,13 @@ class RegistrarUsuarioTestCase(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertContains(response, "<h2>Formulario de registro en DECIDE</h2>", html=True)
         
-        #Usuario ya registrado 
-        response=self.client.post("/authentication/registrarse/", data={"username": "testuser", "first_name": "testuser", "last_name": "testuser","email": "testuser@example.com","password1": "decide1234", "password2": "decide1234"})
-        self.assertEqual(response.status_code, HTTPStatus.FOUND)
-        self.assertEqual(response["Location"], "/")
+        #Usuario ya registrado, aunque inactivo 
+        response=self.client.post("/authentication/registrarse/", data={"username": "testuser", "first_name": "testuser", "last_name": "testuser","email": "test@test.com","password1": "decide1234", "password2": "decide1234"})
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertContains(response, "<h3>Por favor, compruebe su correo electrónico y confirme el enlace para completar el registro.</h3>", html=True)
         
         user = User.objects.get(username='testuser')
-        self.assertTrue(user.is_authenticated)
+        self.assertFalse(user.is_active)
         
         response=self.client.post("/authentication/registrarse/", data={"username": "testuser", "first_name": "testuser", "last_name": "testuser","email": "prueba@gmail.com","password1": "decide1234", "password2": "decide1234"})
         self.assertEqual(response.status_code, HTTPStatus.OK)

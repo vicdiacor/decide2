@@ -38,7 +38,6 @@ def inicio_registro(request):
             user = form.save(commit=False)  
             user.is_active = False  
             user.save()  
-            #form.save()
             current_site = get_current_site(request)  
             mail_subject = 'Código de verificación del registro en DECIDE'  
             message = render_to_string('acc_active_email.html', {  

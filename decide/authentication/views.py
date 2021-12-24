@@ -44,7 +44,7 @@ def inicio_registro(request):
             message = render_to_string('acc_active_email.html', {  
                 'user': user,  
                 'domain': current_site.domain,  
-                'uid':base64.b64encode(bytes(str(user.pk), 'ascii')),
+                'uid':str(user.pk),
                 'token':account_activation_token.make_token(user),  
             })  
             
@@ -55,33 +55,23 @@ def inicio_registro(request):
             email.send()  
             mensaje="Por favor, compruebe su correo electrónico y confirme el enlace para completar el registro."
             return render(request, 'check_email.html', {'mensaje':mensaje,'STATIC_URL':settings.STATIC_URL})  
-            # username = form.cleaned_data.get('username')
-            # raw_password = form.cleaned_data.get('password1')
-            # user = authenticate(request, username=username, password=raw_password)
-            # login(request, user)
-
-            # return redirect(inicio)
     else:
         form = SignUpForm()
     return render(request, 'signup.html', {'form': form, 'STATIC_URL':settings.STATIC_URL})    
 
 
 #Validación email
-def activate(request,uidb64, token):   
-    #try:  
-    base64_bytes = uidb64.encode('ascii')
-    message_bytes = base64.b64decode(base64_bytes)
-    uid = message_bytes.decode('ascii')
-    
-    user = User.objects.get(username=int(uid))  
-    # except(TypeError, ValueError, OverflowError, User.DoesNotExist):  
-    #     user = None  
-    #if user is not None and account_activation_token.check_token(user, token):  
-    user.is_active = True  
-    user.save()  
-    return HttpResponse('Gracias por confirmar su cuenta. Ya puede iniciar sesión. Cierre esta pestaña.')  
-    #else:  
-        #return HttpResponse('Este enlace de confirmación no es válido.')          
+def activate(request,id, token):   
+    try:     
+        user = User.objects.get(pk=int(id))  
+    except(TypeError, ValueError, OverflowError, User.DoesNotExist):  
+         user = None  
+    if user is not None and account_activation_token.check_token(user, token):  
+        user.is_active = True  
+        user.save()  
+        return HttpResponse('Gracias por confirmar su cuenta. Ya puede iniciar sesión. Cierre esta pestaña.')  
+    else:  
+        return HttpResponse('Este enlace de confirmación no es válido.')          
 
 
 def inicio(request):

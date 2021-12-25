@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
 
 from base import mods
-from base.tests import SeleniumBaseTestCase
+from base.tests import BaseTestCase, SeleniumBaseTestCase
 from selenium.webdriver.common.by import By
 
 from django.contrib import auth
@@ -18,7 +18,9 @@ import os
 import time
 import openpyxl
 
-from selenium.common.exceptions import NoSuchElementException        
+from selenium.common.exceptions import NoSuchElementException
+
+from authentication.import_and_export import *       
 
 
 
@@ -144,40 +146,6 @@ class AuthTestCase(APITestCase):
         )
 
 class SeleniumTestCase(SeleniumBaseTestCase):
-
-    def setUp(self):
-        g1 = Group(name='Grupo 1', pk=100)
-        g1.save()
-
-        u1 = User(username='username1', password='password')
-        u1.save()
-        u1.groups.set([g1])
-        u1.save()
-
-        u2 = User(username='username2', password='password')
-        u2.save()
-        u2.groups.set([g1])
-        u2.save()
-
-        u3 = User(username='username3', password='password')
-        u3.save()
-        u3.groups.set([g1])
-        u3.save()
-
-        u4 = User(username='username4', password='password')
-        u4.save()
-        u4.groups.set([g1])
-        u4.save()
-
-
-        u5 = User(username='username5', password='password')
-        u5.save()
-        u5.groups.set([g1])
-        u5.save()
-
-        return super().setUp()
-
-
 
     def test_simpleCorrectLogin(self):
         self.login()
@@ -429,6 +397,149 @@ class RegistrarUsuarioTestCase(TestCase):
         self.assertContains(response, "<h2>Formulario de registro en DECIDE</h2>", html=True)
 
 
+
+
+class ImportAndExportGroupTestCase(TestCase):
+
+    def setUp(self):
+        g1 = Group(name='Grupo 1', pk=100)
+        g1.save()
+
+        g2 = Group(name='Grupo 2', pk=101)
+        g2.save()
+
+        u1 = User(username='username1', password='password')
+        u1.save()
+        u1.groups.set([g1, g2])
+        u1.save()
+
+        u2 = User(username='username2', password='password')
+        u2.save()
+        u2.groups.set([g1])
+        u2.save()
+
+        u3 = User(username='username3', password='password')
+        u3.save()
+        u3.groups.set([g1])
+        u3.save()
+
+        u4 = User(username='username4', password='password')
+        u4.save()
+        u4.groups.set([g1])
+        u4.save()
+
+
+        u5 = User(username='username5', password='password')
+        u5.save()
+        u5.groups.set([g1])
+        u5.save()
+
+        return super().setUp()
+
+        
+
+    # Prueba la función "readTxtFile"
+    def test_read_txt_file(self):
+
+        file1 = open('authentication/files/testfiles/testgroup1.txt', 'rb')
+        users_list_1 = readTxtFile(file1)
+
+        # Comproba cada usuario de la lista devuelta
+        self.assertTrue(len(users_list_1)==5)
+        self.assertEquals(users_list_1[0], User.objects.get(username='username2'))
+        self.assertEquals(users_list_1[1], User.objects.get(username='username5'))
+        self.assertEquals(users_list_1[2], User.objects.get(username='username3'))
+        self.assertEquals(users_list_1[3], User.objects.get(username='username1'))
+        self.assertEquals(users_list_1[4], User.objects.get(username='username4'))
+
+        # Comprueba que devuelve None si algún usuario del fichero no existe
+        file2 = open('authentication/files/testfiles/testgroup2.txt', 'rb')
+        users_list_2 = readTxtFile(file2)
+        self.assertEquals(users_list_2, None)
+
+
+    # Prueba la función "createGroup"
+    def test_create_group(self):
+
+        # Comprueba que crea grupo nuevo
+        name_1 = 'Grupo 3'
+        users_list_1 = User.objects.all()
+        res1 = createGroup(name_1, users_list_1)
+        self.assertTrue(res1)
+        
+        res2 = True
+        try:
+            Group.objects.get(name='Grupo 3')
+        except:
+            res2=False
+
+        self.assertTrue(res2)
+
+
+        # Comprueba que actualiza 'Grupo 1'
+        name_2 = 'Grupo 1'
+        users_list_2 = []
+        u1 = User.objects.get(username='username1')
+        users_list_2.append(u1)
+
+
+        res3 = createGroup(name_2, users_list_2)
+        self.assertFalse(res3)
+        self.assertEquals(len(User.objects.filter(groups__name='Grupo 1')), 1)
+
+
+    # Prueba la función "readExcelFile"
+    def test_read_excel_file(self):
+        users_list_1 = readExcelFile('authentication/files/testfiles/testgroup1.xlsx')
+
+        # Comproba cada usuario de la lista devuelta
+        self.assertTrue(len(users_list_1)==5)
+        self.assertEquals(users_list_1[0], User.objects.get(username='username2'))
+        self.assertEquals(users_list_1[1], User.objects.get(username='username5'))
+        self.assertEquals(users_list_1[2], User.objects.get(username='username3'))
+        self.assertEquals(users_list_1[3], User.objects.get(username='username1'))
+        self.assertEquals(users_list_1[4], User.objects.get(username='username4'))
+
+        # Comprueba que devuelve None si algún usuario del fichero no existe
+        users_list_2 = readExcelFile('authentication/files/testfiles/testgroup2.xlsx')
+        self.assertEquals(users_list_2, None)
+
+
+    # Prueba la función "auxUsersList"
+    def test_aux_users_list(self):
+        username_list_1 = ['username1', 'username2', 'username3']
+        users_list_1 = auxUsersList(username_list_1)
+        
+        self.assertEquals(users_list_1[0], User.objects.get(username='username1'))
+        self.assertEquals(users_list_1[1], User.objects.get(username='username2'))
+        self.assertEquals(users_list_1[2], User.objects.get(username='username3'))
+
+        username_list_2 = ['username1', 'username2', 'usernamequenoexiste']
+        users_list_2 = auxUsersList(username_list_2)
+
+        self.assertEquals(users_list_2, None)
+
+
+    # Prueba la función "writeInExcelUsernames"
+    def test_write_in_excel_usernames(self):
+        # Fichero correcto
+        users = User.objects.all()
+        path = 'authentication/files/temp_export.xlsx'
+        name = 'temp_export.xlsx'
+        writeInExcelUsernames(users, path, name)
+
+        # Leer el fichero excel
+        workbook = openpyxl.load_workbook(path)
+        sheet = workbook.active
+        max_row = sheet.max_row
+        username_list = []
+        for i in range(1, max_row+ 1):
+            cell = sheet.cell(row = i, column = 1)
+            username_list.append(cell.value)
+
+        # Comprueba cada usuario
+        for i in range(0, len(users)):
+            self.assertEquals(users[i].username, username_list[i])
 
 
 class ImportAndExportGroupSeleniumTestCase(SeleniumBaseTestCase):

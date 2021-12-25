@@ -27,6 +27,7 @@ from django.http import HttpResponse
 import os
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
+from django.views.decorators.csrf import csrf_exempt
 
 def registro(request):
     if request.method == 'POST':
@@ -118,6 +119,7 @@ FILE_PATH = 'authentication/files/'
 FORMATS = {'excel':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'txt': 'text/plain'}
 
 
+#@csrf_exempt
 def importGroup(request):
     form = importForm()
 
@@ -155,7 +157,7 @@ def importGroup(request):
     return render(request, 'import_group.html', {'form': form, 'STATIC_URL':settings.STATIC_URL})
         
 
-
+#@csrf_exempt
 def exportGroup(request):
     form = exportForm()
 

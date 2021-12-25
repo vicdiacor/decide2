@@ -148,7 +148,7 @@ def importGroup(request):
                 if (b):
                     messages.success(request, "Grupo creado correctamente.")
                 else:
-                    messages.error(request, "Ya existe un grupo con el mismo nombre.")
+                    messages.success(request, "Grupo actualizado correctamente.")
             else:
                 messages.error(request, "Uno de los usuarios indicados no existe.")
 

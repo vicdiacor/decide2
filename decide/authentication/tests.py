@@ -18,6 +18,8 @@ import os
 import time
 import openpyxl
 
+from selenium.common.exceptions import NoSuchElementException        
+
 
 
 class AuthTestCase(APITestCase):
@@ -427,15 +429,20 @@ class RegistrarUsuarioTestCase(TestCase):
         self.assertContains(response, "<h2>Formulario de registro en DECIDE</h2>", html=True)
 
 
+
+
 class ImportAndExportGroupSeleniumTestCase(SeleniumBaseTestCase):
 
     def setUp(self):
         g1 = Group(name='Grupo 1', pk=100)
         g1.save()
 
+        g2 = Group(name='Grupo 2', pk=101)
+        g2.save()
+
         u1 = User(username='username1', password='password')
         u1.save()
-        u1.groups.set([g1])
+        u1.groups.set([g1, g2])
         u1.save()
 
         u2 = User(username='username2', password='password')
@@ -464,33 +471,60 @@ class ImportAndExportGroupSeleniumTestCase(SeleniumBaseTestCase):
 
     def test_import_group(self):
         self.driver.get(f"{self.live_server_url}/authentication/groups/import/")
-        self.driver.find_element_by_id('id_name').send_keys('Grupo 2')
+        self.driver.find_element_by_id('id_name').send_keys('Grupo 3')
         self.driver.find_element_by_id('id_file').send_keys(os.getcwd() + "/authentication/files/testfiles/testgroup1.txt")
         self.driver.find_element_by_xpath("//input[@value='Importar']").click()
 
         self.driver.find_element_by_class_name('success')
 
-        self.driver.find_element_by_id('id_name').send_keys('Grupo 3')
+        self.driver.find_element_by_id('id_name').clear()
+        self.driver.find_element_by_id('id_name').send_keys('Grupo 4')
         self.driver.find_element_by_id('id_file').send_keys(os.getcwd() + "/authentication/files/testfiles/testgroup1.xlsx")
         self.driver.find_element_by_xpath("//input[@value='Importar']").click()
 
         self.driver.find_element_by_class_name('success')
 
-        # Comprueba que existen 3 grupos (setUp + 2 grupos creados)
+        # Comprueba que existen 4 grupos (setUp + 2 grupos creados)
         self.login()
         self.driver.get(f"{self.live_server_url}/admin/auth/group/")
-        self.assertEquals(len(self.driver.find_elements_by_class_name(name='field-__str__')), 3)
+        self.assertEquals(len(self.driver.find_elements_by_class_name(name='field-__str__')), 4)
 
 
     # Prueba si se introduce un nombre de grupo ya existente
-    def test_import_wrong_group_name(self):
+    def test_import_group_name_already_exists(self):
         self.driver.get(f"{self.live_server_url}/authentication/groups/import/")
-        self.driver.find_element_by_id('id_name').send_keys('Grupo 1')
-        self.driver.find_element_by_id('id_file').send_keys(os.getcwd() + "/authentication/files/testfiles/testgroup1.txt")
+        self.driver.find_element_by_id('id_name').send_keys('Grupo 2')
+        self.driver.find_element_by_id('id_file').send_keys(os.getcwd() + "/authentication/files/testfiles/testgroup3.txt")
         self.driver.find_element_by_xpath("//input[@value='Importar']").click()
 
-        # Comprueba que aparece un mensaje de error
-        self.driver.find_element_by_class_name('error')
+        # Comprueba que aparece un mensaje de éxito
+        self.driver.find_element_by_class_name('success')
+
+
+        # Comprueba que username1 no pertenece al grupo 2
+        self.login()
+        self.driver.get(f"{self.live_server_url}/admin/auth/user/")
+        self.driver.find_element_by_link_text("username1").click()
+        result = True
+        try:
+            self.driver.find_element_by_xpath("//select[@name='groups']/option[text()='Grupo 2']")
+        except NoSuchElementException:
+            result = False
+
+        self.assertFalse(result)
+
+
+        # Comprueba que username2 sí pertenece al grupo 2
+        self.driver.get(f"{self.live_server_url}/admin/auth/user/")
+        self.driver.find_element_by_link_text("username2").click()
+        result = True
+        try:
+            self.driver.find_element_by_xpath("//select[@name='groups']/option[text()='Grupo 2']")
+        except NoSuchElementException:
+            result = False
+
+        self.assertTrue(result)
+
 
 
     # Prueba si se introduce un fichero con un username que no existe

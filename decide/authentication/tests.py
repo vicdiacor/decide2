@@ -196,7 +196,7 @@ class SeleniumTestCase(SeleniumBaseTestCase):
         self.driver.close()
 
         
-    def test_selenium_correct_registration_and_login(self):
+    def test_selenium_correct_registration_but_inactive(self):
         self.driver.get(f"{self.live_server_url}/authentication/registrarse/")
         self.driver.find_element(By.ID, "id_username").send_keys("testuser")
         self.driver.find_element(By.ID, "id_first_name").send_keys("test")
@@ -205,24 +205,63 @@ class SeleniumTestCase(SeleniumBaseTestCase):
         self.driver.find_element(By.ID, "id_password1").send_keys("decide1234")
         self.driver.find_element(By.ID, "id_password2").send_keys("decide1234")
         self.driver.find_element_by_xpath('//button["Registrarse"]').click()
-        
+        self.driver.find_element_by_xpath('//h3["Por favor, compruebe su correo electrónico y confirme el enlace para completar el registro."]')
+        time.sleep(3)
         user = User.objects.get(username='testuser')
-
-        self.driver.get("https://mail.google.com/")
-        self.driver.find_element(By.ID, "identifierId").send_keys("decidepartchullo")
-        self.driver.find_element_by_xpath('//button["Siguiente"]').click()
-        self.driver.find_element(By.CLASS_NAME, "whsOnd zHQkBf").send_keys("decide1234%")
-        self.driver.find_element_by_xpath('//button["Siguiente"]').click()
-
+        self.assertFalse(user.is_active)
 
         self.driver.get(f"{self.live_server_url}/authentication/iniciar_sesion/")
         self.driver.find_element(By.ID, "id_username").send_keys("testuser")
         self.driver.find_element(By.ID, "id_password").send_keys("decide1234")
         self.driver.find_element_by_xpath('//button["Inicie sesión"]').click()
         
-        user = User.objects.get(username='testuser')
-        self.assertTrue(user.is_authenticated)
+        self.driver.find_element_by_xpath('//li["Esta cuenta está inactiva."]')
+
+    def test_selenium_correct_login_active_user(self):
+        self.credentials = {
+            'username': 'testuser',
+            'password': 'decide1234'}
         
+        User.objects.create_user(**self.credentials)
+        user=User.objects.get(username="testuser")
+        self.assertTrue(user.is_active)
+        
+        self.driver.get(f"{self.live_server_url}/authentication/iniciar_sesion/")
+        self.driver.find_element(By.ID, "id_username").send_keys("testuser")
+        self.driver.find_element(By.ID, "id_password").send_keys("decide1234")
+        self.driver.find_element_by_xpath('//button["Inicie sesión"]').click()
+        
+        self.assertTrue(user.is_authenticated)  
+        
+        
+    def test_selenium_usuario_malas_credenciales(self):
+        self.credentials = {
+            'username': 'testuser',
+            'password': 'decide1234'}
+        
+        User.objects.create_user(**self.credentials)
+        user=User.objects.get(username="testuser")
+        self.assertTrue(user.is_active)       
+        
+        self.driver.get(f"{self.live_server_url}/authentication/iniciar_sesion/")
+        self.driver.find_element(By.ID, "id_username").send_keys("testuser_wrong")
+        self.driver.find_element(By.ID, "id_password").send_keys("decide1234")
+        self.driver.find_element_by_xpath('//button["Inicie sesión"]').click()
+        
+        self.driver.find_element_by_xpath('//li["Por favor, introduzca un nombre de usuario y clave correctos. Observe que ambos campos pueden ser sensibles a mayúsculas."]')
+        
+        user = auth.get_user(self.client)
+        self.assertFalse(user.is_authenticated)  
+        
+        self.driver.get(f"{self.live_server_url}/authentication/iniciar_sesion/")
+        self.driver.find_element(By.ID, "id_username").send_keys("testuser")
+        self.driver.find_element(By.ID, "id_password").send_keys("decide12343")
+        self.driver.find_element_by_xpath('//button["Inicie sesión"]').click()
+        
+        self.driver.find_element_by_xpath('//li["Por favor, introduzca un nombre de usuario y clave correctos. Observe que ambos campos pueden ser sensibles a mayúsculas."]')
+        
+        user = auth.get_user(self.client)
+        self.assertFalse(user.is_authenticated)  
         
     def test_selenium_different_passwords(self):
         self.driver.get(f"{self.live_server_url}/authentication/registrarse/")

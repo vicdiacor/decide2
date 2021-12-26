@@ -6,6 +6,7 @@ from http import HTTPStatus
 
 from django.contrib.auth.models import User
 from rest_framework.authtoken.models import Token
+from selenium import webdriver
 
 from base import mods
 from base.tests import BaseTestCase, SeleniumBaseTestCase
@@ -651,6 +652,13 @@ class ImportAndExportGroupSeleniumTestCase(SeleniumBaseTestCase):
 
 
     def test_export_group(self):
+
+        # Fuerza a que options.headless=True ya que si es False cambia la ruta de descarga del fichero
+        # No hay método get para obtener las opciones actuales del driver
+        options = webdriver.ChromeOptions()
+        options.headless = True
+        self.driver = webdriver.Chrome(options=options)
+
         self.driver.get(f"{self.live_server_url}/authentication/groups/export/")
         select = Select(self.driver.find_element_by_id('id_group'))
         select.select_by_visible_text('Grupo 1')

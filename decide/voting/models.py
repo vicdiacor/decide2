@@ -85,8 +85,8 @@ class Voting(models.Model):
                 except:
                     raise ValidationError('One o more groups do not exist.')
 
-        # if self.deadline is not None and self.deadline <= date.today():
-        #     raise ValidationError('Deadline must be in the future.')
+        if self.deadline is not None and self.deadline <= date.today():
+            raise ValidationError('Deadline must be in the future.')
         return super().clean()
 
     def create_pubkey(self):

@@ -1,3 +1,4 @@
+import time
 import random
 from django.contrib.auth.models import User, UserManager, Group
 from django.test import TestCase, Client
@@ -335,7 +336,7 @@ class GroupOperationsAPITestCases(BaseTestCase):
 
 
 class GroupOperationsTestCases(SeleniumBaseTestCase):
-    url = 'census/operations/'
+    url = '/census/operations/'
 
     def setUp(self):
         super().setUp()
@@ -371,11 +372,11 @@ class GroupOperationsTestCases(SeleniumBaseTestCase):
         super().tearDown()
 
     def test_get_form(self):
-        self.driver.get(f'{self.live_server_url + self.url}')
+        self.driver.get(self.live_server_url + self.url)
         self.assertEquals(self.driver.current_url,
-                          'authentication/iniciar_sesion/')
+                          self.live_server_url + '/authentication/iniciar_sesion/?next=/census/operations/')
 
-        self.login(user='user1', password='user1')
+        self.auth_login(username='user1', password='user1')
         self.driver.get(f'{self.live_server_url + self.url}')
 
         self.assertTrue(
@@ -383,28 +384,24 @@ class GroupOperationsTestCases(SeleniumBaseTestCase):
         )
 
     def test_group_post(self):
-        self.login(user='user1', password='user1')
-        self.driver.get(f'{self.live_server_url + self.url}')
+        self.auth_login(username='user1', password='user1')
+        self.driver.get(self.live_server_url + self.url)
 
-        # Rellenar el formulario
-        self.driver.find_elements_by_css_selector(
+        self.driver.find_element_by_css_selector(
             '#id_group_name').send_keys('union')
 
-        self.driver.find_elements_by_css_selector(
-            '#id_base_group > option:nth-child(1)').click()
+        self.driver.find_element_by_css_selector(
+            '#id_base_group > option:nth-child(2)').click()
 
-        self.driver.find_elements_by_css_selector(
+        self.driver.find_element_by_css_selector(
             '#id_groups > option:nth-child(2)').click()
 
-        self.driver.find_elements_by_css_selector('#id_is_public').click()
+        self.driver.find_element_by_css_selector('#id_is_public').click()
 
-        self.driver.find_elements_by_css_selector(
+        self.driver.find_element_by_css_selector(
             '#id_operation > option:nth-child(1)').click()
 
-        self.driver.find_elements_by_css_selector(
+        self.driver.find_element_by_css_selector(
             'body > form > input[type=submit]:nth-child(3)').click()
 
-        # Comprobar que se ha creado el grupo
         self.assertEquals(ParentGroup.objects.filter(name='union').count(), 1)
-        self.assertTrue(
-            len(self.driver.find_elements_by_xpath('//*[text() = \'Grupo creado exitosamente\']')) == 1)

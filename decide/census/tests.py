@@ -1,7 +1,7 @@
 import random
 from django.contrib.auth.models import User, UserManager, Group
 from django.test import TestCase, Client
-
+from base.tests import SeleniumBaseTestCase
 from rest_framework.test import APIClient
 
 from .models import Census, ParentGroup
@@ -332,3 +332,79 @@ class GroupOperationsAPITestCases(BaseTestCase):
 
         difference = ParentGroup.objects.get(name='difference')
         self.assertEquals(len(difference.voters.all()), 1)
+
+
+class GroupOperationsTestCases(SeleniumBaseTestCase):
+    url = 'census/operations/'
+
+    def setUp(self):
+        super().setUp()
+
+        user1 = User(username='user1')
+        user1.set_password('user1')
+        user1.save()
+
+        user2 = User(username='user2')
+        user2.set_password('user2')
+        user2.save()
+
+        user3 = User(username='user3')
+        user3.set_password('user3')
+        user3.save()
+
+        user4 = User(username='user4')
+        user4.set_password('user4')
+        user4.save()
+
+        group1 = ParentGroup.objects.create(name='group1')
+        group1.voters.set([user1, user2, user3])
+
+        group2 = ParentGroup.objects.create(name='group2')
+        group2.voters.set([user1, user2, user4])
+
+        group3 = ParentGroup.objects.create(name='group3')
+
+        self.groups = [group1, group2]
+        self.users = [user1, user2, user3, user4]
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_get_form(self):
+        self.driver.get(f'{self.live_server_url + self.url}')
+        self.assertEquals(self.driver.current_url,
+                          'authentication/iniciar_sesion/')
+
+        self.login(user='user1', password='user1')
+        self.driver.get(f'{self.live_server_url + self.url}')
+
+        self.assertTrue(
+            len(self.driver.find_elements_by_css_selector('body > form')) == 1
+        )
+
+    def test_group_post(self):
+        self.login(user='user1', password='user1')
+        self.driver.get(f'{self.live_server_url + self.url}')
+
+        # Rellenar el formulario
+        self.driver.find_elements_by_css_selector(
+            '#id_group_name').send_keys('union')
+
+        self.driver.find_elements_by_css_selector(
+            '#id_base_group > option:nth-child(1)').click()
+
+        self.driver.find_elements_by_css_selector(
+            '#id_groups > option:nth-child(2)').click()
+
+        self.driver.find_elements_by_css_selector('#id_is_public').click()
+
+        self.driver.find_elements_by_css_selector(
+            '#id_operation > option:nth-child(1)').click()
+
+        self.driver.find_elements_by_css_selector(
+            'body > form > input[type=submit]:nth-child(3)').click()
+
+        # Comprobar que se ha creado el grupo
+        self.assertEquals(ParentGroup.objects.filter(name='union').count(), 1)
+        self.assertTrue(
+            len(self.driver.find_elements_by_xpath('//*[text() = \'Grupo creado exitosamente\']')) == 1)

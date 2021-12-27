@@ -6,8 +6,8 @@ class GroupOperationsForm(forms.Form):
     group_name = forms.CharField(
         max_length=80, label='Nombre del grupo generado')
 
-    base_group = forms.ModelChoiceField(
-        queryset=ParentGroup.objects.all(), label='Grupo base sobre el que se aplica la operación')
+    base_group = forms.ModelChoiceField(queryset=ParentGroup.objects.all(
+    ), label='Grupo base sobre el que se aplica la operación')
 
     groups = forms.ModelMultipleChoiceField(queryset=ParentGroup.objects.all(),
                                             label='Grupos')
@@ -24,12 +24,9 @@ class GroupOperationsForm(forms.Form):
         groups = cleaned_data.get('groups')
         base_group = cleaned_data.get('base_group')
 
-        if len(groups) < 1:
-            raise forms.ValidationError('Debes seleccionar al menos un grupo')
-
         if base_group in groups:
             raise forms.ValidationError(
-                'El grupo base sobre el que quieres aplica la operación no puede estar en la lista de grupos')
+                'El grupo base sobre el que quieres aplica la operación no puede estar seleccionado en la lista de grupos')
 
         return cleaned_data
 

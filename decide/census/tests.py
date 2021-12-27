@@ -116,7 +116,7 @@ class ParentGroupTestCase(BaseTestCase):
     #     self.assertEqual(0, ParentGroup.objects.count())
 
 
-class GroupOperationsTestCases(BaseTestCase):
+class GroupOperationsAPITestCases(BaseTestCase):
     UNION_URL = '/census/union'
     INTERSECTION_URL = '/census/intersection'
     DIFFERENCE_URL = '/census/difference'
@@ -155,63 +155,85 @@ class GroupOperationsTestCases(BaseTestCase):
         super().tearDown()
 
     def test_group_operation_wrong_name(self):
-        data = {'groups': ['group1', 'group2'], 'is_public': True}
+        data = {'base_group': 'group1', 'groups': [
+            'group2'], 'is_public': True}
 
         self.login(user='user1', password='user1')
         response = self.client.post(self.UNION_URL, data, format='json')
         self.assertEqual(response.status_code, 400)
 
-        data = {'name': '', 'groups': ['group1', 'group2'], 'is_public': True}
+        data = {'name': '', 'base_group': 'group1',
+                'groups': ['group2'], 'is_public': True}
 
         self.login(user='user1', password='user1')
         response = self.client.post(
             self.INTERSECTION_URL, data, format='json')
         self.assertEqual(response.status_code, 400)
 
-        data = {'name': 2, 'groups': ['group1', 'group2'], 'is_public': True}
+        data = {'name': 2, 'base_group': 'group1',
+                'groups': ['group2'], 'is_public': True}
 
         self.login(user='user1', password='user1')
         response = self.client.post(self.DIFFERENCE_URL, data, format='json')
         self.assertEqual(response.status_code, 400)
 
-        data = {'name': '  ', 'groups': [
-            'group1', 'group2'], 'is_public': True}
+        data = {'name': '  ', 'base_group': 'group1', 'groups': [
+            'group2'], 'is_public': True}
 
         self.login(user='user1', password='user1')
         response = self.client.post(self.UNION_URL, data, format='json')
         self.assertEqual(response.status_code, 400)
 
     def test_group_operation_name_already_exist(self):
-        data = {'name': 'group1', 'groups': [
-            'group1', 'group2'], 'is_public': True}
+        data = {'name': 'group1', 'base_group': 'group1',
+                'groups': ['group2'], 'is_public': True}
 
         self.login(user='user1', password='user1')
         response = self.client.post(self.UNION_URL, data, format='json')
         self.assertEqual(response.status_code, 409)
 
+    def test_group_operation_base_groups(self):
+        data = {'name': 'test', 'groups': ['group2'], 'is_public': True}
+
+        self.login(user='user1', password='user1')
+        response = self.client.post(
+            self.INTERSECTION_URL, data, format='json')
+        self.assertEqual(response.status_code, 400)
+
+        data = {'name': 'test', 'base_group': 2,
+                'groups': ['group2'], 'is_public': True}
+
+        self.login(user='user1', password='user1')
+        response = self.client.post(
+            self.INTERSECTION_URL, data, format='json')
+        self.assertEqual(response.status_code, 400)
+
     def test_group_operation_groups(self):
-        data = {'name': 'test', 'is_public': True}
+        data = {'name': 'test', 'base_group': 'group1', 'is_public': True}
 
         self.login(user='user1', password='user1')
         response = self.client.post(
             self.INTERSECTION_URL, data, format='json')
         self.assertEqual(response.status_code, 400)
 
-        data = {'name': 'test', 'groups': 'group1', 'is_public': True}
+        data = {'name': 'test', 'base_group': 'group1',
+                'groups': 'group2', 'is_public': True}
 
         self.login(user='user1', password='user1')
         response = self.client.post(
             self.INTERSECTION_URL, data, format='json')
         self.assertEqual(response.status_code, 400)
 
-        data = {'name': 'test', 'groups': ['group1', 2], 'is_public': True}
+        data = {'name': 'test', 'base_group': 'group1',
+                'groups': ['group2', 2], 'is_public': True}
 
         self.login(user='user1', password='user1')
         response = self.client.post(
             self.INTERSECTION_URL, data, format='json')
         self.assertEqual(response.status_code, 400)
 
-        data = {'name': 'test', 'groups': ['group1'], 'is_public': True}
+        data = {'name': 'test', 'base_group': 'group1',
+                'groups': [], 'is_public': True}
 
         self.login(user='user1', password='user1')
         response = self.client.post(
@@ -219,15 +241,15 @@ class GroupOperationsTestCases(BaseTestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_group_operation_wrong_public(self):
-        data = {'name': 'test', 'groups': ['group1', 'group2']}
+        data = {'name': 'test', 'base_group': 'group1', 'groups': ['group2']}
 
         self.login(user='user1', password='user1')
         response = self.client.post(
             self.INTERSECTION_URL, data, format='json')
         self.assertEqual(response.status_code, 400)
 
-        data = {'name': 'test', 'groups': [
-            'group1', 'group2'], 'is_public': 'True'}
+        data = {'name': 'test', 'base_group': 'group1', 'groups': [
+            'group2'], 'is_public': 'True'}
 
         self.login(user='user1', password='user1')
         response = self.client.post(
@@ -235,16 +257,32 @@ class GroupOperationsTestCases(BaseTestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_group_operation_without_being_member(self):
-        data = {'name': 'test', 'groups': [
-            'group1', 'group2', 'group3'], 'is_public': True}
+        data = {'name': 'test', 'base_group': 'group3', 'groups': [
+            'group1', 'group2'], 'is_public': True}
 
         self.login(user='user1', password='user1')
         response = self.client.post(
             self.INTERSECTION_URL, data, format='json')
         self.assertEqual(response.status_code, 401)
 
-        data = {'name': 'test', 'groups': [
-            'group1', 'group2', 'ula'], 'is_public': True}
+        data = {'name': 'test', 'base_group': 'group1', 'groups': [
+            'group3', 'group2'], 'is_public': True}
+
+        self.login(user='user1', password='user1')
+        response = self.client.post(
+            self.INTERSECTION_URL, data, format='json')
+        self.assertEqual(response.status_code, 401)
+
+        data = {'name': 'test', 'base_group': 'ula', 'groups': [
+            'group2', 'group1'], 'is_public': True}
+
+        self.login(user='user1', password='user1')
+        response = self.client.post(
+            self.INTERSECTION_URL, data, format='json')
+        self.assertEqual(response.status_code, 400)
+
+        data = {'name': 'test', 'base_group': 'group1', 'groups': [
+            'group2', 'ula'], 'is_public': True}
 
         self.login(user='user1', password='user1')
         response = self.client.post(
@@ -252,8 +290,8 @@ class GroupOperationsTestCases(BaseTestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_group_union(self):
-        data = {'name': 'union', 'groups': [
-            'group1', 'group2'], 'is_public': True}
+        data = {'name': 'union', 'base_group': 'group1', 'groups': [
+            'group2'], 'is_public': True}
 
         response = self.client.post(self.UNION_URL, data, format='json')
         self.assertEqual(response.status_code, 401)
@@ -266,8 +304,8 @@ class GroupOperationsTestCases(BaseTestCase):
         self.assertEqual(len(union.voters.all()), len(self.users))
 
     def test_group_intersection(self):
-        data = {'name': 'intersection',
-                'groups': ['group1', 'group2'], 'is_public': False}
+        data = {'name': 'intersection', 'base_group': 'group1',
+                'groups': ['group2'], 'is_public': False}
 
         response = self.client.post(
             self.INTERSECTION_URL, data, format='json')
@@ -282,8 +320,8 @@ class GroupOperationsTestCases(BaseTestCase):
         self.assertEqual(len(intersection.voters.all()), 2)
 
     def test_group_difference(self):
-        data = {'name': 'difference', 'groups': [
-            'group1', 'group2'], 'is_public': True}
+        data = {'name': 'difference', 'base_group': 'group1', 'groups': [
+            'group2'], 'is_public': True}
 
         response = self.client.post(self.DIFFERENCE_URL, data, format='json')
         self.assertEqual(response.status_code, 401)

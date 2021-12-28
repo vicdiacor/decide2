@@ -94,9 +94,8 @@ class VotingView(generics.ListCreateAPIView):
                 # Añadir al censo de dicha votación
                 try:
                     for voter in voters:
-                        census, isCreated = Census.objects.get_or_create(voting_id=voting_id, voter_id=voter.pk)  
-                        if isCreated:
-                            census.save()  
+                        census = Census(voting_id=voting_id, voter_id=voter.pk)
+                        census.save()
                 except IntegrityError:
                     return Response('Error try to create census', status=ST_409)
                 

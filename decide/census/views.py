@@ -56,7 +56,8 @@ class CensusDetail(generics.RetrieveDestroyAPIView):
         return Response('Valid voter')
 
 
-class GroupOperations():
+class GroupOperations(generics.CreateAPIView):
+    permission_classes = (permissions.IsAuthenticated,)
 
     def check(self, user, group_name, groups, is_public):
         if not group_name or not isinstance(group_name, str) or group_name.isspace():
@@ -74,84 +75,53 @@ class GroupOperations():
 
         for group in groups:
             try:
-                if user not in ParentGroup.objects.get(name=group).user_set.all():
+                if user not in ParentGroup.objects.get(name=group).voters.all():
                     return Response('User must be in all groups to perform this action', status=ST_401)
             except ObjectDoesNotExist:
                 return Response(f'There is no group with name \'{group}\', please, try again', status=ST_400)
 
-    class GroupUnion(generics.CreateAPIView):
-        permissions_classes = (permissions.IsAuthenticated,)
+        return None
 
-        def create(self, request, *args, **kwargs):
-            group_name = request.data.get('name')
-            groups = request.data.get('groups')
-            is_public = request.data.get('is_public')
-            log.info(
-                f'{request.user} is trying to create group with name {group_name} and groups {groups} and is_public {is_public}')
-            user = request.user
+    def create(self, request, *args, **kwargs):
+        group_name = request.data.get('name')
+        groups = request.data.get('groups')
+        is_public = request.data.get('is_public')
+        user = request.user
 
-            checks = GroupOperations()
-            response = checks.check(
-                user=user, group_name=group_name, groups=groups, is_public=is_public)
-            if response:
-                return response
+        response = self.check(
+            user=user, group_name=group_name, groups=groups, is_public=is_public)
+        if response:
+            return response
 
-            new_group = ParentGroup.objects.create(
-                name=group_name.strip(), isPublic=is_public)
-            qs = ParentGroup.objects.get(name=groups[0]).user_set.all()
-            for group in groups[1:]:
-                qs = qs.union(ParentGroup.objects.get(
-                    name=group).user_set.all())
+        new_group = ParentGroup.objects.create(
+            name=group_name.strip(), isPublic=is_public)
+            
+        url = request.path.split('/census/')[1]
+        if url == 'union':
+            qs = self.union(groups)
+        elif url == 'intersection':
+            qs = self.intersection(groups)
+        elif url == 'difference':
+            qs = self.difference(groups)
+        new_group.voters.set(qs)
+        return Response(group_successfully_created, status=ST_201)
 
-            new_group.user_set.set(qs)
-            return Response(group_successfully_created, status=ST_201)
+    def union(self,  groups):
+        qs = ParentGroup.objects.get(name=groups[0]).voters.all()
+        for group in groups[1:]:
+            qs = qs.union(ParentGroup.objects.get(name=group).voters.all())
+        return qs
 
-    class GroupIntersection(generics.CreateAPIView):
-        permissions_classes = (permissions.IsAuthenticated,)
+    def intersection(self,  groups):
+        qs = ParentGroup.objects.get(name=groups[0]).voters.all()
+        for group in groups[1:]:
+            qs = qs.intersection(
+                ParentGroup.objects.get(name=group).voters.all())
+        return qs
 
-        def create(self, request, *args, **kwargs):
-            group_name = request.data.get('name')
-            groups = request.data.get('groups')
-            is_public = request.data.get('is_public')
-            user = request.user
-
-            checks = GroupOperations()
-            response = checks.check(
-                user=user, group_name=group_name, groups=groups, is_public=is_public)
-            if response:
-                return response
-
-            new_group = ParentGroup.objects.create(
-                name=group_name, isPublic=is_public)
-            qs = ParentGroup.objects.get(name=groups[0]).user_set.all()
-            for group in groups[1:]:
-                qs = qs.intersection(ParentGroup.objects.get(
-                    name=group).user_set.all())
-
-            new_group.user_set.set(qs)
-            return Response(group_successfully_created, status=ST_201)
-
-    class GroupDifference(generics.CreateAPIView):
-        permissions_classes = (permissions.IsAuthenticated,)
-
-        def create(self, request, *args, **kwargs):
-            group_name = request.data.get('name')
-            groups = request.data.get('groups')
-            is_public = request.data.get('is_public')
-            user = request.user
-
-            checks = GroupOperations()
-            response = checks.check(
-                user=user, group_name=group_name, groups=groups, is_public=is_public)
-            if response:
-                return response
-
-            new_group = ParentGroup.objects.create(
-                name=group_name, isPublic=is_public)
-            qs = ParentGroup.objects.get(name=groups[0]).user_set.all()
-            for group in groups[1:]:
-                qs = qs.difference(ParentGroup.objects.get(
-                    name=group).user_set.all())
-
-            new_group.user_set.set(qs)
-            return Response(group_successfully_created, status=ST_201)
+    def difference(self,  groups):
+        qs = ParentGroup.objects.get(name=groups[0]).voters.all()
+        for group in groups[1:]:
+            qs = qs.difference(
+                ParentGroup.objects.get(name=group).voters.all())
+        return qs

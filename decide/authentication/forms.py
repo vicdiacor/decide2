@@ -11,7 +11,7 @@ class SignUpForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ('username', 'first_name', 'last_name', 'email', 'password1', 'password2', )
+        fields = ('username', 'first_name', 'last_name', 'email', 'password1', 'password2')
 
 class importForm(forms.Form):
     name = forms.CharField(max_length=80, min_length=1, label='Nombre del grupo', required=True)

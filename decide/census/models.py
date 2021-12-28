@@ -13,4 +13,12 @@ class ParentGroup(Group):
     isPublic = models.BooleanField(default=False)
     voters = models.ManyToManyField(User, blank=True)
 
-    
+class Request(models.Model):
+    ACCEPTED = 'ACCEPTED' 
+    REJECTED = 'REJECTED'
+    PENDING = 'PENDING'
+    RequestStatus = ((ACCEPTED, 'ACCEPTED'), (REJECTED, 'REJECTED'), (PENDING, 'PENDING'))
+
+    voter_id = models.PositiveIntegerField()
+    group_id = models.PositiveIntegerField()
+    status = models.CharField(max_length=255, choices=RequestStatus, default=PENDING)

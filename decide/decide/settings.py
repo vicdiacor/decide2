@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'scheduler.apps.SchedulerConfig',
 
     'corsheaders',
     'django_filters',
@@ -68,6 +69,7 @@ MODULES = [
     'store',
     'visualizer',
     'voting',
+    'scheduler',
 ]
 
 BASEURL = 'http://localhost:8000'
@@ -185,3 +187,9 @@ if os.path.exists("config.jsonnet"):
 
 
 INSTALLED_APPS = INSTALLED_APPS + MODULES
+
+EMAIL_USE_TLS = True  
+EMAIL_HOST = 'smtp.gmail.com'  
+EMAIL_HOST_USER = 'decidepartchullo@gmail.com'  
+EMAIL_HOST_PASSWORD = 'decide1234%'  
+EMAIL_PORT = 587  

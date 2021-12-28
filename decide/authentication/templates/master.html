@@ -31,19 +31,36 @@
 
             </li>
 
-        {% if user.is_authenticated %}
-            <li><a>Sesión iniciada de {{user.username }}</a></li>
-            <li><a href="/authentication/cerrar_sesion">Cerrar sesión</a></li>
-            {% if user.is_staff %}
-            <li><a href="/authentication/notifications_admin">Notificaciones ADMIN</a></li>
-            {% endif %}
-            <li><a href="/authentication/notifications">Notificaciones</a></li>
-        {%else %}
-            <li><a href="/authentication/registrarse">Regístrate</a></li>
-            <li><a href="/authentication/iniciar_sesion">Iniciar sesión</a></li>
-        {% endif %}
             <li><a href='/authentication/groups/import'>Importar grupo desde Excel.</a></li>
             <li><a href='/authentication/groups/export'>Exportar miembros de un grupo a Excel.</a></li>
+
+            {% if user.is_superuser%}
+            <li><a href="/admin">Zona de administración</a></li>
+            {%else%}
+            {%endif%}
+
+
+            {% if user.is_authenticated %}
+            <li><a href="#">Sesión iniciada de {{user.username }}</a>
+                <div class="uk-navbar-dropdown">
+                    <ul class="uk-nav uk-navbar-dropdown-nav">
+                        <li><a href="/authentication/cerrar_sesion">Cerrar sesión</a></li>
+                    </ul>
+                    <ul class="uk-nav uk-navbar-dropdown-nav">
+                        {% if user.is_staff %}
+                            <li><a href="/voting/notifications_admin">Notificaciones ADMIN</a></li>
+                        {% endif %}
+                    </ul>
+                    <ul class="uk-nav uk-navbar-dropdown-nav">
+                        <li><a href="/voting/notifications">Notificaciones</a></li>
+                    </ul>
+                </div>
+            </li>
+
+            {%else %}
+            <li><a href="/authentication/registrarse">Regístrate</a></li>
+            <li><a href="/authentication/iniciar_sesion">Iniciar sesión</a></li>
+            {% endif %}
         </ul>
 
     </div>

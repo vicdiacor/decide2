@@ -3,6 +3,7 @@
 
 {% block contenido %}
 
+
 <table class="table table-hover">
 	<h2>Nuevas votaciones para {{request.user}}</h2>
 	<tr>
@@ -12,6 +13,7 @@
 		<th>Fecha de inicio</th>
 	</tr>
 	{% for v in votings %}
+        {% if v.start_date != None %}
         <tr>
             <td>{{v.name}}</td>
             <td>{{v.desc}}</td>
@@ -23,14 +25,11 @@
                 {% endif %}
             </td>
             <td>
-                {% if v.start_date == None %}		
-                    Esta votación no ha comenzado
-                {% else %}
-                    {{v.start_date}}
-                {% endif %}
+                {{v.start_date}}
             </td>
         </tr> 
-	{% endfor %}
+        {% endif %}
+    {% endfor %}
 
 </table>
 

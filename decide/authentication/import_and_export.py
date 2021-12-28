@@ -14,16 +14,12 @@ def readTxtFile(file):
 def createGroup(name, user_list):
     g, is_created = Group.objects.get_or_create(name=name)
     if (is_created==False):
-        # Eliminamos todos los usuarios de dicho grupo
-        for u in User.objects.filter(groups__name=g.name):
-            g.user_set.remove(u)
-        g.save()
-            
-    # Añadimos todos los usuarios de la lista (crear o actualizar)
+        return False
+
     for u in user_list:
         g.user_set.add(u)
 
-    return is_created
+    return True
 
 
 # Dado el path de un fichero excel, lee la primera columna y retorna una lista de usuarios o None si 

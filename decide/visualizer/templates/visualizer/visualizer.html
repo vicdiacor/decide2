@@ -167,12 +167,11 @@
     }
     function descargarImagen(){
         var image = myChart.toBase64Image();
-        // console.log(image);
+        
         var a = document.createElement('a');
         a.href = myChart.toBase64Image();
         a.download = 'chart.png';
 
-        // Trigger the download
         a.click();
     }
     function descargarPDF(){

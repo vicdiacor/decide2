@@ -15,7 +15,14 @@
     </b-navbar>
 
     <div class="voting container" width="50%">
-        <h1>[[ voting.id ]] - [[ voting.name ]]</h1>
+        <div class='row'>
+            <h1 class='col-sm'>[[ voting.id ]] - [[ voting.name ]]</h1>
+            <div class="col-sm" style="text-align: right; padding-top: 10px;">
+                <button onclick="descargarExcel()" class='btn btn-success'>Descargar excel</button>
+                <button onclick="descargarImagen()" class='btn btn-success'>Descargar imágen</button>
+                <button onclick="descargarPDF()" class='btn btn-success'>Descargar PDF</button>
+            </div>
+        </div>
         <h2 v-if="!voting.start_date">Votación no comenzada</h2>
         <h2 v-else-if="!voting.end_date">Votación en curso</h2>
         <div v-else>
@@ -37,7 +44,7 @@
                     {% endfor %}
                 </tbody>
             </table>
-            <div id="buttons" style="padding-top: 2px;"></div>
+            <div id="buttons" style="padding-top: 2px; text-align: center;"></div>
             <div id="canvas"></div>
         </div>
     </div>
@@ -103,13 +110,19 @@
     }]
 
     const types = ['bar', 'doughnut', 'pie', 'polarArea']
+    const types_es = {
+        'bar': 'Barra',
+        'doughnut': 'Donut',
+        'pie': 'Tarta',
+        'polarArea': 'Área polar',
+    }
     // Crear botones
     for(const type in types){
         button = document.createElement('button')
         button.setAttribute('onclick', 'changeChart("' + types[type] + '")')
-        button.setAttribute('class', 'btn btn-info')
+        button.setAttribute('class', 'btn btn-primary')
         button.setAttribute('style', 'margin-right: 2px; width: 10%;')
-        button.appendChild(document.createTextNode(types[type]))
+        button.appendChild(document.createTextNode(types_es[types[type]]))
         // button = '<button onclick="changeChart(' + type + ')" class="btn btn-info" style="margin-right: 2px;">' + type + '</button>'
         document.getElementById('buttons').appendChild(button)
     }
@@ -143,6 +156,30 @@
     function changeChart(type) {
         document.getElementById('myChart').remove()
         createChart(type)
+    }
+</script>
+<script>
+    function descargarExcel(){
+        type = myChart.config.type
+        console.log('Generando excel de tipo ' + type)
+        alert('Todavía no está implementado')
+        // https://jsfiddle.net/canvasjs/7kqeprcs/
+    }
+    function descargarImagen(){
+        var image = myChart.toBase64Image();
+        // console.log(image);
+        var a = document.createElement('a');
+        a.href = myChart.toBase64Image();
+        a.download = 'chart.png';
+
+        // Trigger the download
+        a.click();
+    }
+    function descargarPDF(){
+        type = myChart.config.type
+        console.log('Generando pdf de tipo ' + type)
+        alert('Todavía no está implementado')
+        // https://codepen.io/jordanwillis/pen/peqVOM
     }
 </script>
 </body>

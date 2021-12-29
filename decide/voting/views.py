@@ -58,8 +58,13 @@ class VotingView(generics.ListCreateAPIView):
                 except:
                     return Response({}, status=status.HTTP_400_BAD_REQUEST)
 
+        #Creación de la pregunta
+        question_type= request.data.get('question_type')
 
-        question = Question(desc=request.data.get('question'))
+        if (question_type!='' and question_type!=None and question_type!= 'SO' and  question_type!='MC'):
+            return Response({}, status=status.HTTP_400_BAD_REQUEST)
+            
+        question = Question(desc=request.data.get('question'),type= question_type if (question_type!='' and question_type!=None) else 'SO' )
         question.save()
         for idx, q_opt in enumerate(request.data.get('question_opt')):
             opt = QuestionOption(question=question, option=q_opt, number=idx)
@@ -67,7 +72,6 @@ class VotingView(generics.ListCreateAPIView):
         voting = Voting(name=request.data.get('name'), desc=request.data.get('desc'),
                 question=question)
         voting.save()
-
         auth, _ = Auth.objects.get_or_create(url=settings.BASEURL,
                                           defaults={'me': True, 'name': 'test auth'})
         auth.save()
@@ -78,6 +82,7 @@ class VotingView(generics.ListCreateAPIView):
         # Añadir todos los usuarios del grupo a la votación
 
         
+        voting_id = voting.pk
         if (groups != '' and groups!=None):
 
             # Obtener todos los usuarios que pertenecen al grupo
@@ -87,18 +92,18 @@ class VotingView(generics.ListCreateAPIView):
 
                 # Por cada usuario
                 # Añadir al censo de dicha votación
-                voting_id = Voting.objects.all()[Voting.objects.all().count()-1].pk
                 try:
                     for voter in voters:
-                        census = Census(voting_id=voting_id, voter_id=voter.pk)
-                        census.save()
+                        census, isCreated = Census.objects.get_or_create(voting_id=voting_id, voter_id=voter.pk)  
+                        if isCreated:
+                            census.save()  
                 except IntegrityError:
                     return Response('Error try to create census', status=ST_409)
                 
             ###############
 
 
-        return Response({}, status=status.HTTP_201_CREATED)
+        return Response(data={'id': voting_id}, status=status.HTTP_201_CREATED)
 
 
 class VotingUpdate(generics.RetrieveUpdateDestroyAPIView):
@@ -111,7 +116,7 @@ class VotingUpdate(generics.RetrieveUpdateDestroyAPIView):
         action = request.data.get('action')
         if not action:
             return Response({}, status=status.HTTP_400_BAD_REQUEST)
-
+        
         voting = get_object_or_404(Voting, pk=voting_id)
         msg = ''
         st = status.HTTP_200_OK
@@ -121,6 +126,7 @@ class VotingUpdate(generics.RetrieveUpdateDestroyAPIView):
                 st = status.HTTP_400_BAD_REQUEST
             else:
                 voting.start_date = timezone.now()
+                # voting.create_pubkey()
                 voting.save()
                 msg = 'Voting started'
         elif action == 'stop':

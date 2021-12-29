@@ -26,6 +26,7 @@ from django.template.loader import render_to_string
 import os
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
+from django.views.decorators.csrf import csrf_exempt
 from django.core.mail import EmailMessage  
 from .tokens import account_activation_token  
 import base64
@@ -148,6 +149,7 @@ FILE_PATH = 'authentication/files/'
 FORMATS = {'excel':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'txt': 'text/plain'}
 
 
+#@csrf_exempt
 def importGroup(request):
     form = importForm()
 
@@ -178,14 +180,14 @@ def importGroup(request):
                 if (b):
                     messages.success(request, "Grupo creado correctamente.")
                 else:
-                    messages.error(request, "Ya existe un grupo con el mismo nombre.")
+                    messages.success(request, "Grupo actualizado correctamente.")
             else:
                 messages.error(request, "Uno de los usuarios indicados no existe.")
 
     return render(request, 'import_group.html', {'form': form, 'STATIC_URL':settings.STATIC_URL})
         
 
-
+#@csrf_exempt
 def exportGroup(request):
     form = exportForm()
 

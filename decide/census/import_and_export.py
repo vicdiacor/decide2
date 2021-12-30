@@ -13,21 +13,37 @@ def readTxtFile(file):
 
 # Dado un nombre y una lista de usuarios, devuelve True si crea un nuevo grupo y False si el grupo ya existe. 
 def createGroup(name, user_list, is_public):
+
+    # Comprueba si existe un Group con ese nombre pero no un ParentGroup
+    # En dicho caso, borra el Group
+    g2 = None
+    try:
+        g2 = Group.objects.get(name=name)
+    except:
+        pass
+
+    if (g2 != None):
+        try: 
+            g = ParentGroup.objects.get(name=name)
+        except:
+            g2.delete()
+    
+
     g, is_created = ParentGroup.objects.get_or_create(name=name)
-    if (is_created==False):
+
+    if (not is_created):
         # Eliminamos todos los usuarios de dicho grupo
         for u in User.objects.filter(groups__name=g.name):
             g.user_set.remove(u)
-        
         g.save()
-            
+
     # Añadimos todos los usuarios de la lista (crear o actualizar)
     for u in user_list:
         g.user_set.add(u)
 
     g.isPublic = is_public
     g.save()
-    
+
     return is_created
 
 

@@ -70,9 +70,9 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     var voting = {{ voting| safe}};
-    var labels = []
+    const labels = []
     voting.postproc.forEach(function add(option) { labels.push(option.option)})
-    var data = []
+    const data = []
     voting.postproc.forEach(function add(option) { data.push(option.postproc)})
     //labels.push('nuevo') // Para probar que aunque haya más valores se siguen viendo bien los colores
     //data.push(10)
@@ -158,12 +158,26 @@
         createChart(type)
     }
 </script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.14.0/xlsx.full.min.js'></script>
 <script>
     function descargarExcel(){
-        type = myChart.config.type
-        console.log('Generando excel de tipo ' + type)
-        alert('Todavía no está implementado')
-        // https://jsfiddle.net/canvasjs/7kqeprcs/
+        dataPoints = []
+        for(var label in labels){
+            d = {}
+            d['label'] = labels[label]
+            d['votes'] = data[label]
+            dataPoints.push(d)
+        }
+        dataPoints.unshift({'label': 'Options', 'votes': 'Votes'});
+        var ws = XLSX.utils.json_to_sheet(dataPoints, {skipHeader:true, dateNF: 'YYYYMMDD HH:mm:ss'});
+        if(!ws['!cols']) ws['!cols'] = [];
+        ws['!cols'][0] = { wch: 17 };
+        var wb = XLSX.utils.book_new();
+
+        var filename = 'data_sheet'
+
+        XLSX.utils.book_append_sheet(wb, ws, filename);
+        XLSX.writeFile(wb, filename + ".xlsx");
     }
     function descargarImagen(){
         var image = myChart.toBase64Image();

@@ -51,7 +51,7 @@
     <div class="modal" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" style="text-align: center; background-color: rgba(0,0,0,0.3);">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <button class="btn btn-primary" type="button" disabled>
+                <button id='info' class="btn btn-primary" type="button" disabled>
                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                     Generando PDF...
                   </button>
@@ -191,16 +191,25 @@
         XLSX.utils.book_append_sheet(wb, ws, filename);
         XLSX.writeFile(wb, filename + ".xlsx");
     }
-    function descargarImagen() {
-        var image = myChart.toBase64Image();
+    async function descargarImagen() {
+        document.getElementById('info').innerHTML = 'Generando imágenes...'
+        myModal = $('#myModal')
+        myModal.fadeIn()
+        for(type in types){
+            changeChart(types[type])
+            await new Promise(r => setTimeout(r, 1000));
+            var image = myChart.toBase64Image();
 
-        var a = document.createElement('a');
-        a.href = myChart.toBase64Image();
-        a.download = 'chart.png';
+            var a = document.createElement('a');
+            a.href = myChart.toBase64Image();
+            a.download = types[type] + '.png';
 
-        a.click();
+            a.click();
+        }
+        myModal.fadeOut()
     }
     async function descargarPDF() {
+        document.getElementById('info').innerHTML = 'Generando PDF...'
         myModal = $('#myModal')
         myModal.fadeIn()
         const images = []

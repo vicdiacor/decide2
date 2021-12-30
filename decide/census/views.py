@@ -20,7 +20,7 @@ from decide import settings
 from .models import Census, ParentGroup
 from .forms import GroupOperationsForm
 
-group_successfully_created = "Group successfully created"
+group_successfully_created = "Grupo creado con éxito"
 operations_template = 'group_operations.html'
 
 

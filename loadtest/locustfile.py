@@ -115,4 +115,3 @@ class ExportGroup(HttpUser):
     host = HOST
     tasks = [DefExportGroup]
     wait_time= between(3,5)
-

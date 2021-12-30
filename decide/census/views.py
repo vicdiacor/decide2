@@ -16,10 +16,12 @@ from rest_framework.status import (
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from base.perms import UserIsStaff
+from decide import settings
 from .models import Census, ParentGroup
 from .forms import GroupOperationsForm
 
 group_successfully_created = "Group successfully created"
+operations_template = 'group_operations.html'
 
 
 class CensusCreate(generics.ListCreateAPIView):
@@ -129,9 +131,10 @@ class GroupOperations(View):
         form = GroupOperationsForm()
         form.fields['base_group'].queryset = request.user.parentgroup_set.all()
         form.fields['groups'].queryset = request.user.parentgroup_set.all()
-        return render(request, 'group_operations.html', {'form': form})
+        context = {'form': form, 'STATIC_URL': settings.STATIC_URL}
+        return render(request, operations_template, context=context)
 
-    @method_decorator(login_required(login_url='/authentication/iniciar_sesion'))
+    @ method_decorator(login_required(login_url='/authentication/iniciar_sesion'))
     def post(self, request, *args, **kwargs):
         form = GroupOperationsForm(request.POST)
         if form.is_valid():
@@ -142,11 +145,14 @@ class GroupOperations(View):
                 cd['groups'],
                 cd['is_public'],
                 cd['operation'])
-            return HttpResponse('Grupo creado exitosamente')
+            context = {'form': form, 'STATIC_URL': settings.STATIC_URL,
+                       'message': group_successfully_created}
+            return render(request, operations_template, context=context)
         else:
             form.fields['base_group'].queryset = request.user.parentgroup_set.all()
             form.fields['groups'].queryset = request.user.parentgroup_set.all()
-            return render(request, 'group_operations.html', {'form': form})
+            context = {'form': form, 'STATIC_URL': settings.STATIC_URL}
+            return render(request, operations_template, context=context)
 
     def operate(self, group_name, base_group, groups, is_public, operation):
         new_group: ParentGroup = ParentGroup.objects.create(

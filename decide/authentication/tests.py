@@ -461,10 +461,10 @@ class RegistrarUsuarioTestCase(TestCase):
 class ImportAndExportGroupTestCase(TestCase):
 
     def setUp(self):
-        g1 = Group(name='Grupo 1', pk=100)
+        g1 = ParentGroup(name='Grupo 1', pk=100)
         g1.save()
 
-        g2 = Group(name='Grupo 2', pk=101)
+        g2 = ParentGroup(name='Grupo 2', pk=101)
         g2.save()
 
         u1 = User(username='username1', password='password')
@@ -520,30 +520,44 @@ class ImportAndExportGroupTestCase(TestCase):
     # Prueba la función "createGroup"
     def test_create_group(self):
 
-        # Comprueba que crea grupo nuevo
+        # Comprueba que crea grupo nuevo PRIVADO
         name_1 = 'Grupo 3'
         users_list_1 = User.objects.all()
-        res1 = createGroup(name_1, users_list_1)
+        res1 = createGroup(name_1, users_list_1, False)
         self.assertTrue(res1)
         
         res2 = True
         try:
-            Group.objects.get(name='Grupo 3')
+            ParentGroup.objects.get(name='Grupo 3', isPublic=False)
         except:
             res2=False
 
         self.assertTrue(res2)
 
+        # Comprueba que crea grupo nuevo PUBLICO
+        name_2 = 'Grupo 4'
+        users_list_2 = User.objects.all()
+        res3 = createGroup(name_2, users_list_2, True)
+        self.assertTrue(res3)
+        
+        res4 = True
+        try:
+            ParentGroup.objects.get(name='Grupo 4', isPublic=True)
+        except:
+            res4=False
+
+        self.assertTrue(res4)
+
 
         # Comprueba que actualiza 'Grupo 1'
-        name_2 = 'Grupo 1'
-        users_list_2 = []
+        name_3 = 'Grupo 1'
+        users_list_3 = []
         u1 = User.objects.get(username='username1')
-        users_list_2.append(u1)
+        users_list_3.append(u1)
 
 
-        res3 = createGroup(name_2, users_list_2)
-        self.assertFalse(res3)
+        res5 = createGroup(name_3, users_list_3, False)
+        self.assertFalse(res5)
         self.assertEquals(len(User.objects.filter(groups__name='Grupo 1')), 1)
 
 
@@ -604,10 +618,10 @@ class ImportAndExportGroupTestCase(TestCase):
 class ImportAndExportGroupSeleniumTestCase(SeleniumBaseTestCase):
 
     def setUp(self):
-        g1 = Group(name='Grupo 1', pk=100)
+        g1 = ParentGroup(name='Grupo 1', pk=100)
         g1.save()
 
-        g2 = Group(name='Grupo 2', pk=101)
+        g2 = ParentGroup(name='Grupo 2', pk=101)
         g2.save()
 
         u1 = User(username='username1', password='password')
@@ -642,6 +656,7 @@ class ImportAndExportGroupSeleniumTestCase(SeleniumBaseTestCase):
     def test_import_group(self):
         self.driver.get(f"{self.live_server_url}/authentication/groups/import/")
         self.driver.find_element_by_id('id_name').send_keys('Grupo 3')
+        self.driver.find_element_by_id('id_is_public').click()
         self.driver.find_element_by_id('id_file').send_keys(os.getcwd() + "/authentication/files/testfiles/testgroup1.txt")
         self.driver.find_element_by_xpath("//input[@value='Importar']").click()
 
@@ -711,26 +726,23 @@ class ImportAndExportGroupSeleniumTestCase(SeleniumBaseTestCase):
 
     def test_export_group(self):
 
-        # Fuerza a que options.headless=True ya que si es False cambia la ruta de descarga del fichero
-        # No hay método get para obtener las opciones actuales del driver
-        options = webdriver.ChromeOptions()
-        options.headless = True
-        self.driver = webdriver.Chrome(options=options)
-
         self.driver.get(f"{self.live_server_url}/authentication/groups/export/")
         select = Select(self.driver.find_element_by_id('id_group'))
         select.select_by_visible_text('Grupo 1')
         self.driver.find_element_by_xpath("//input[@value='Exportar']").click()
 
         # Espero a que termine la descarga
-        time.sleep(3)
-        # Obtenemos la ruta de descarga
-        #download_file_path = os.path.join(os.path.expanduser('~'), 'Descargas/export_group.xlsx') 
+        time.sleep(2)
+        # Obtenemos la ruta de descarga, cambia dependiendo del valor de options.headless
+        download_file_path = 'export_group.xlsx'
+        if (not os.path.exists('export_group.xlsx')):
+            download_file_path = os.path.join(os.path.expanduser('~'), 'Descargas/export_group.xlsx') 
         # Compruebo si el fichero existe
-        self.assertEquals(os.path.exists('export_group.xlsx'), True)
+        print(download_file_path)
+        self.assertEquals(os.path.exists(download_file_path), True)
 
         # Compruebo si todos los usuarios del grupo están
-        workbook = openpyxl.load_workbook('export_group.xlsx')
+        workbook = openpyxl.load_workbook(download_file_path)
         sheet = workbook.active
 
         # Lee el excel y almacena en username_list los nombres de usuario
@@ -741,4 +753,4 @@ class ImportAndExportGroupSeleniumTestCase(SeleniumBaseTestCase):
             self.assertEquals(cell.value in usernames, True)
 
         # Eliminamos el fichero descargado
-        os.remove("export_group.xlsx") 
+        os.remove(download_file_path) 

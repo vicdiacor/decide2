@@ -157,6 +157,7 @@ def importGroup(request):
         form = importForm(request.POST, request.FILES)
         if form.is_valid():
             name = form.cleaned_data['name'] 
+            is_public = form.cleaned_data['is_public']
             file = request.FILES['file']
             format = file.content_type
 
@@ -175,7 +176,7 @@ def importGroup(request):
 
             # Si todos los usuarios existen, creo el grupo y añado todos los usuarios de la lista
             if (users_list != None):
-                b = createGroup(name, users_list)
+                b = createGroup(name, users_list, is_public)
                 # Si b==False, entonces ya existía un grupo con mismo nombre
                 if (b):
                     messages.success(request, "Grupo creado correctamente.")

@@ -213,3 +213,6 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'decidepartchullo@gmail.com'  
 EMAIL_HOST_PASSWORD = 'decide1234%'  
 EMAIL_PORT = 587  
+
+SOCIAL_AUTH_TWITTER_KEY='uWQolqWb6mXT1xeeNaJfouVse'
+SOCIAL_AUTH_TWITTER_SECRET='QDxDHfOhG5RqggsEsYZj7Fsc6shgfG1T6D9r2QkT34yfeqmLCs'

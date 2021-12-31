@@ -23,6 +23,20 @@ from .forms import GroupOperationsForm
 group_successfully_created = "Grupo creado con éxito"
 operations_template = 'group_operations.html'
 
+from django.views.generic.base import View
+from census.import_and_export import *
+from census.forms import *
+import os
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib import messages
+from django.http import HttpResponse
+from django.shortcuts import render
+from decide import settings
+
+
+
 
 class CensusCreate(generics.ListCreateAPIView):
     permission_classes = (UserIsStaff,)
@@ -183,3 +197,79 @@ class GroupOperations(View):
         for group in groups:
             qs = qs.difference(group.voters.all())
         return qs
+
+
+
+
+
+
+class ImportExportGroup(View):
+    ### Importar/Exportar
+
+
+    FILE_PATH = 'authentication/files/'
+    FORMATS = {'excel':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'txt': 'text/plain'}
+
+
+    #@csrf_exempt
+    def importGroup(request):
+        form = importForm()
+
+        if request.method == 'POST':
+            form = importForm(request.POST, request.FILES)
+            if form.is_valid():
+                name = form.cleaned_data['name'] 
+                is_public = form.cleaned_data['is_public']
+                file = request.FILES['file']
+                format = file.content_type
+
+                users_list = []
+                # Si file es excel, guardo el archivo para abrirlo después
+                if (format == ImportExportGroup.FORMATS['excel']):
+                    path = default_storage.save(ImportExportGroup.FILE_PATH + 'temp_import.xlsx', ContentFile(file.read()))
+                    users_list = readExcelFile(path)
+                    os.remove(os.path.join(path))   # Borro el archivo tras su uso
+                # Si file es txt, no necesito guardar el fichero
+                elif (format == ImportExportGroup.FORMATS['txt']):
+                    users_list = readTxtFile(file)
+                else:
+                    messages.error(request, "Formato de archivo no válido.")
+                    return render(request, 'import_group.html', {'form': form, 'STATIC_URL':settings.STATIC_URL})
+
+                # Si todos los usuarios existen, creo el grupo y añado todos los usuarios de la lista
+                if (users_list != None):
+                    b = createGroup(name, users_list, is_public)
+                    # Si b==False, entonces ya existía un grupo con mismo nombre
+                    if (b):
+                        messages.success(request, "Grupo creado correctamente.")
+                    else:
+                        messages.success(request, "Grupo actualizado correctamente.")
+                else:
+                    messages.error(request, "Uno de los usuarios indicados no existe.")
+
+        return render(request, 'import_group.html', {'form': form, 'STATIC_URL':settings.STATIC_URL})
+            
+
+    #@csrf_exempt
+    def exportGroup(request):
+        form = exportForm()
+
+        if request.method == 'POST':
+            form = exportForm(request.POST, request.FILES)
+            if form.is_valid():
+                group = form.cleaned_data['group']
+                users = User.objects.filter(groups=group)
+                
+                # Crea el Excel con los usuarios exportados
+                writeInExcelUsernames(users, ImportExportGroup.FILE_PATH + 'temp_export.xlsx', 'temp_export.xlsx')
+                    
+                # Abrir el Excel generado
+                with open(ImportExportGroup.FILE_PATH + 'temp_export.xlsx', 'rb') as excel:
+                    data = excel.read()
+
+                # Automáticamente descarga el archivo
+                resp = HttpResponse(data, content_type=ImportExportGroup.FORMATS['excel'])
+                resp['Content-Disposition'] = 'attachment; filename=export_group.xlsx'
+                return resp
+
+        return render(request, 'export_group.html', {'form': form, 'STATIC_URL':settings.STATIC_URL})

@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
-    #"allauth.socialaccount.providers.twitter",
+    'allauth.socialaccount.providers.discord',
     'allauth.socialaccount.providers.github',
     'corsheaders',
     'django_filters',
@@ -68,7 +68,7 @@ REST_FRAMEWORK = {
 }
 
 AUTHENTICATION_BACKENDS = [
-    #'base.backends.AuthBackend',
+    'base.backends.AuthBackend',
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
 

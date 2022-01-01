@@ -40,7 +40,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'scheduler.apps.SchedulerConfig',
-
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    #"allauth.socialaccount.providers.twitter",
+    'allauth.socialaccount.providers.github',
     'corsheaders',
     'django_filters',
     'rest_framework',
@@ -48,6 +53,11 @@ INSTALLED_APPS = [
     'rest_framework_swagger',
     'gateway',
 ]
+
+SITE_ID = 1
+ACCOUNT_EMAIL_VERIFICATION = "none"
+LOGIN_REDIRECT_URL = "home"
+ACCOUNT_LOGOUT_ON_GET = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -58,7 +68,8 @@ REST_FRAMEWORK = {
 }
 
 AUTHENTICATION_BACKENDS = [
-    'base.backends.AuthBackend',
+    #'base.backends.AuthBackend',
+    "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
 MODULES = [
@@ -74,7 +85,7 @@ MODULES = [
     'scheduler',
 ]
 
-BASEURL = 'http://localhost:8000'
+BASEURL = 'http://127.0.0.1:8000'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -212,7 +223,4 @@ EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'  
 EMAIL_HOST_USER = 'decidepartchullo@gmail.com'  
 EMAIL_HOST_PASSWORD = 'decide1234%'  
-EMAIL_PORT = 587  
-
-SOCIAL_AUTH_TWITTER_KEY='uWQolqWb6mXT1xeeNaJfouVse'
-SOCIAL_AUTH_TWITTER_SECRET='QDxDHfOhG5RqggsEsYZj7Fsc6shgfG1T6D9r2QkT34yfeqmLCs'
+EMAIL_PORT = 587

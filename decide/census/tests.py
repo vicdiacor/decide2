@@ -27,7 +27,9 @@ import openpyxl
 
 from selenium.common.exceptions import NoSuchElementException
 
-from census.import_and_export import *    
+from census.import_and_export import * 
+
+import re
 
 
 class CensusTestCase(BaseTestCase):
@@ -624,29 +626,41 @@ class ImportAndExportGroupSeleniumTestCase(SeleniumBaseTestCase):
 
 
     def test_import_group(self):
+        self.login()
         self.driver.get(f"{self.live_server_url}/census/groups/import/")
         self.driver.find_element_by_id('id_name').send_keys('Grupo 3')
         self.driver.find_element_by_id('id_is_public').click()
         self.driver.find_element_by_id('id_file').send_keys(os.getcwd() + "/census/files/testfiles/testgroup1.txt")
         self.driver.find_element_by_xpath("//input[@value='Importar']").click()
 
-        self.driver.find_element_by_class_name('success')
+        result = True
+        try:
+            self.driver.find_element_by_class_name('success')
+        except NoSuchElementException:
+            result = False
+        self.assertTrue(result)
+
 
         self.driver.find_element_by_id('id_name').clear()
         self.driver.find_element_by_id('id_name').send_keys('Grupo 4')
         self.driver.find_element_by_id('id_file').send_keys(os.getcwd() + "/census/files/testfiles/testgroup1.xlsx")
         self.driver.find_element_by_xpath("//input[@value='Importar']").click()
 
-        self.driver.find_element_by_class_name('success')
+        result = True
+        try:
+            self.driver.find_element_by_class_name('success')
+        except NoSuchElementException:
+            result = False
+        self.assertTrue(result)
 
         # Comprueba que existen 4 grupos (setUp + 2 grupos creados)
-        self.login()
         self.driver.get(f"{self.live_server_url}/admin/auth/group/")
         self.assertEquals(len(self.driver.find_elements_by_class_name(name='field-__str__')), 4)
 
 
     # Prueba si se introduce un nombre de grupo ya existente
     def test_import_group_name_already_exists(self):
+        self.login()
         self.driver.get(f"{self.live_server_url}/census/groups/import/")
         self.driver.find_element_by_id('id_name').send_keys('Grupo 2')
         self.driver.find_element_by_id('id_file').send_keys(os.getcwd() + "/census/files/testfiles/testgroup3.txt")
@@ -657,7 +671,6 @@ class ImportAndExportGroupSeleniumTestCase(SeleniumBaseTestCase):
 
 
         # Comprueba que username1 no pertenece al grupo 2
-        self.login()
         self.driver.get(f"{self.live_server_url}/admin/auth/user/")
         self.driver.find_element_by_link_text("username1").click()
         result = True
@@ -681,9 +694,28 @@ class ImportAndExportGroupSeleniumTestCase(SeleniumBaseTestCase):
         self.assertTrue(result)
 
 
+    # Prueba qué ocurre si se envía el formulario con el nombre vacío
+    def test_import_group_name_empty(self):
+        self.login()
+        self.driver.get(f"{self.live_server_url}/census/groups/import/")
+        self.driver.find_element_by_id('id_name').send_keys(' ')
+        self.driver.find_element_by_id('id_file').send_keys(os.getcwd() + "/census/files/testfiles/testgroup1.txt")
+        self.driver.find_element_by_xpath("//input[@value='Importar']").click()
+
+        # Comprueba que se muestra un mensaje de error
+        result = True
+        try:
+            self.driver.find_element_by_class_name('errorlist')
+        except NoSuchElementException:
+            result = False
+
+        self.assertTrue(result)
+
+
 
     # Prueba si se introduce un fichero con un username que no existe
     def test_import_wrong_username(self):
+        self.login()
         self.driver.get(f"{self.live_server_url}/census/groups/import/")
         self.driver.find_element_by_id('id_name').send_keys('Grupo 2')
         self.driver.find_element_by_id('id_file').send_keys(os.getcwd() + "/census/files/testfiles/testgroup2.txt")
@@ -693,9 +725,18 @@ class ImportAndExportGroupSeleniumTestCase(SeleniumBaseTestCase):
         self.driver.find_element_by_class_name('error')
 
 
+    # Prueba si se intenta importar sin ser superuser
+    def test_import_without_being_superuser(self):
+        self.driver.get(f"{self.live_server_url}/census/groups/import/")
+        self.assertFalse(re.fullmatch(f'{self.live_server_url}/census/groups/import/', self.driver.current_url))
+
+        self.login(username='username1', password='password')
+        self.driver.get(f"{self.live_server_url}/census/groups/import/")
+        self.assertFalse(re.fullmatch(f'{self.live_server_url}/census/groups/import/', self.driver.current_url))
+
 
     def test_export_group(self):
-
+        self.login()
         self.driver.get(f"{self.live_server_url}/census/groups/export/")
         select = Select(self.driver.find_element_by_id('id_group'))
         select.select_by_visible_text('Grupo 1')
@@ -723,3 +764,13 @@ class ImportAndExportGroupSeleniumTestCase(SeleniumBaseTestCase):
 
         # Eliminamos el fichero descargado
         os.remove(download_file_path) 
+
+
+    # Prueba si se intenta exportar sin ser superuser
+    def test_export_without_being_superuser(self):
+        self.driver.get(f"{self.live_server_url}/census/groups/export/")
+        self.assertFalse(re.fullmatch(f'{self.live_server_url}/census/groups/export/', self.driver.current_url))
+
+        self.login(username='username1', password='password')
+        self.driver.get(f"{self.live_server_url}/census/groups/export/")
+        self.assertFalse(re.fullmatch(f'{self.live_server_url}/census/groups/export/', self.driver.current_url))

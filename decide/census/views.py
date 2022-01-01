@@ -30,6 +30,7 @@ import os
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
 from django.http import HttpResponse
 from django.shortcuts import render
@@ -212,6 +213,8 @@ class ImportExportGroup(View):
 
 
     #@csrf_exempt
+    @login_required(login_url='/authentication/iniciar_sesion')
+    @user_passes_test(lambda u: u.is_superuser)    
     def importGroup(request):
         form = importForm()
 
@@ -251,6 +254,8 @@ class ImportExportGroup(View):
             
 
     #@csrf_exempt
+    @login_required(login_url='/authentication/iniciar_sesion')
+    @user_passes_test(lambda u: u.is_superuser)    
     def exportGroup(request):
         form = exportForm()
 

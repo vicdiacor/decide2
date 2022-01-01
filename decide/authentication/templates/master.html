@@ -33,11 +33,10 @@
                 </li>
 
 
-                <li><a href='/census/groups/import'>Importar grupo desde Excel.</a></li>
-                <li><a href='/census/groups/export'>Exportar miembros de un grupo a Excel.</a></li>
-
                 {% if user.is_superuser%}
                 <li><a href="/admin">Zona de administración</a></li>
+                <li><a href='/census/groups/import'>Importar grupo desde Excel.</a></li>
+                <li><a href='/census/groups/export'>Exportar miembros de un grupo a Excel.</a></li>
                 {%else%}
                 {%endif%}
 

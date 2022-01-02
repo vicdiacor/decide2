@@ -168,8 +168,6 @@
                         .then(data => {
                             document.cookie = 'decide='+data.token+';';
                             this.token = data.token;
-                            console.log("Token obtenido: ")
-                            console.log(data.token)
                             this.getUser();
                         })
                         .catch(error => {
@@ -181,8 +179,6 @@
                     this.postData("{% url "gateway" "authentication" "/getuser/" %}", data)
                         .then(data => {
                             this.user = data;
-                            console.log("usuario tras logearse: ")
-                            console.log(data)
                             this.signup = false;
                         }).catch(error => {
                             this.showAlert("danger", '{% trans "Error: " %}' + error);
@@ -211,7 +207,6 @@
                     if (this.selected!=""){ // Votación de opción única
                         
                         this.selectedArray.push(this.selected)
-                        console.log(this.selectedArray)
                         
                     }
 
@@ -240,7 +235,7 @@
                     console.log(this.user.id)
                     console.log("token:")
                     console.log(this.token)
-                    
+
                     var data = {
                         votes: votes,
                         voting: this.voting.id,

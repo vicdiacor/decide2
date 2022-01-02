@@ -182,7 +182,7 @@ class joinGroup(APIView):
                 if group!=None and user!= None and not userIsInTheGroup: #Comprobar también que el usuario no está ya en el grupo....
                     if group.isPublic:
                         
-                        user.groups.add(group)
+                        group.voters.add(user)
                         
                         return Response({})
                 #Grupo privado o en el que ya está el usuario

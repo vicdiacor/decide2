@@ -1,4 +1,5 @@
 {% load static %}
+{% load socialaccount %}
 
 <!DOCTYPE html>
 <html lang='es'>
@@ -41,6 +42,7 @@
                 {%endif%}
 
                 {% if user.is_authenticated %}
+                <li><a href="/census/operations">Operaciones entre grupos</a></li>
                 <li><a href="#">Sesión iniciada de {{user.username }}</a>
                     <div class="uk-navbar-dropdown">
                         <ul class="uk-nav uk-navbar-dropdown-nav">
@@ -48,12 +50,23 @@
                         </ul>
                     </div>
                 </li>
-                <li><a href="/census/operations">Operaciones entre grupos</a></li>
+
 
                 {%else %}
-                <li><a href="/authentication/registrarse">Regístrate</a></li>
                 <li><a href="/authentication/iniciar_sesion">Iniciar sesión</a></li>
+                <li><a href="/authentication/registrarse">Regístrate</a></li>
+
+
+                <li><a href="#">Autentícate con tus redes sociales</a>
+                    <div class="uk-navbar-dropdown">
+                        <ul class="uk-nav uk-navbar-dropdown-nav">
+                            <li><a href="{% provider_login_url 'github' %}">Autentícate con GitHub</a></li>
+                            <li><a href="{% provider_login_url 'discord' %}">Autentícate con Discord</a></li>
+                        </ul>
+                    </div>
+                </li>
                 {% endif %}
+
             </ul>
 
         </div>

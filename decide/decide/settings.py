@@ -40,7 +40,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'scheduler.apps.SchedulerConfig',
-
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.discord',
+    'allauth.socialaccount.providers.github',
     'corsheaders',
     'django_filters',
     'rest_framework',
@@ -48,6 +53,11 @@ INSTALLED_APPS = [
     'rest_framework_swagger',
     'gateway',
 ]
+
+SITE_ID = 1
+ACCOUNT_EMAIL_VERIFICATION = "none"
+LOGIN_REDIRECT_URL = "home"
+ACCOUNT_LOGOUT_ON_GET = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -59,6 +69,7 @@ REST_FRAMEWORK = {
 
 AUTHENTICATION_BACKENDS = [
     'base.backends.AuthBackend',
+    "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
 MODULES = [
@@ -74,7 +85,7 @@ MODULES = [
     'scheduler',
 ]
 
-BASEURL = 'http://localhost:8000'
+BASEURL = 'http://127.0.0.1:8000'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -212,4 +223,25 @@ EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'  
 EMAIL_HOST_USER = 'decidepartchullo@gmail.com'  
 EMAIL_HOST_PASSWORD = 'decide1234%'  
-EMAIL_PORT = 587  
+EMAIL_PORT = 587
+
+
+#Pongo las credenciales de las APIs aquí a pesar de que es inseguro
+#para facilitar el trabajo de mis compañeros al ser un proyecto educativo. Estos datos no deberían aparecer aquí por seguridad
+SOCIALACCOUNT_PROVIDERS = {
+    'discord': {
+        'APP': {
+            'client_id': '926861240196816987',
+            'secret': 'yt6rWIVZP35OPAqGpNFxvkjpt9d27naG',
+            'key': ''
+        }
+    },
+    
+    'github': {
+        'APP': {
+            'client_id': '1058f9ffecc2528581d6',
+            'secret': '36d7a3339c7a19965d3cac1e860882d405fbf67a',
+            'key': ''
+        }
+    }
+}

@@ -170,3 +170,7 @@ class Voting(models.Model):
 
     def __str__(self):
         return self.name
+
+class ChildVoting(models.Model):
+    parent_voting = models.ForeignKey(Voting, on_delete=models.CASCADE, related_name='children')
+    group = models.OneToOneField(Group, on_delete=models.CASCADE)

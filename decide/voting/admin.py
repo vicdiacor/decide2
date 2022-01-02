@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.utils import timezone
 
-from .models import QuestionOption
+from .models import ChildVoting, QuestionOption
 from .models import Question
 from .models import Voting
 
@@ -67,6 +67,8 @@ class VotingAdmin(admin.ModelAdmin):
         # Obtener todos los usuarios que pertenecen al grupo
             for id in groupsIds:
                 group = Group.objects.get(pk=int(id))
+                child = ChildVoting.objects.create(parent_voting=obj, group=group)
+                child.save()
                 voters = User.objects.filter(groups=group)
 
                 # Por cada usuario
@@ -74,9 +76,15 @@ class VotingAdmin(admin.ModelAdmin):
                 for voter in voters:
                     census, isCreated = Census.objects.get_or_create(voting_id=voting_id, voter_id=voter.pk)  
                     if isCreated:
-                        census.save()           
+                        census.save()  
+
+class ChildVotingAdmin(admin.ModelAdmin):
+    list_display = ('parent_voting', 'group')
+    list_filter = ('parent_voting',)
+    search_fields = ('parent_voting', 'group')         
                     
 
 
 admin.site.register(Voting, VotingAdmin)
 admin.site.register(Question, QuestionAdmin)
+admin.site.register(ChildVoting, ChildVotingAdmin)

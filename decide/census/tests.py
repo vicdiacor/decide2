@@ -694,7 +694,7 @@ class ImportAndExportGroupSeleniumTestCase(SeleniumBaseTestCase):
         self.assertTrue(result)
 
 
-    # Prueba qué ocurre si se envía el formulario con el nombre vacío
+    # Prueba qué ocurre si se envía el formulario con el nombre vacío o solo
     def test_import_group_name_empty(self):
         self.login()
         self.driver.get(f"{self.live_server_url}/census/groups/import/")

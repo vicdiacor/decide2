@@ -11,7 +11,7 @@ from base import mods
 from base.models import Auth, Key
 from django.contrib.auth.models import User, Group
 from store.models import Vote
-
+from census.models import ParentGroup
 
 
 class Question(models.Model):
@@ -106,6 +106,34 @@ class Voting(models.Model):
 
     def get_votes(self, token=''):
         # gettings votes from store
+        votes = []
+        for child in ChildVoting.objects.filter(parent_voting=self.pk):
+            votes.extend(child.get_votes(token))
+
+        # anon votes
+        return [[i['a'], i['b']] for i in votes]
+
+    def tally_votes(self, token=''):
+        
+        for child in ChildVoting.objects.filter(parent_voting=self.pk):
+            child.tally_votes(token)
+
+
+    def __str__(self):
+        return self.name
+
+class ChildVoting(models.Model):
+    parent_voting = models.ForeignKey(Voting, on_delete=models.CASCADE, related_name='children')
+    group = models.OneToOneField(ParentGroup, on_delete=models.CASCADE, blank=True)
+
+    tally = JSONField(blank=True, null=True)
+    postproc = JSONField(blank=True, null=True)
+
+    def create_pubkey(self):
+        self.parent_voting.create_pubkey()
+
+    def get_votes(self, token=''):
+        # gettings votes from store
         votes = mods.get('store', params={
                          'voting_id': self.id}, HTTP_AUTHORIZATION='Token ' + token)
 
@@ -119,10 +147,10 @@ class Voting(models.Model):
 
         votes = self.get_votes(token)
 
-        auth = self.auths.first()
+        auth = self.parent_voting.auths.first()
         shuffle_url = "/shuffle/{}/".format(self.id)
         decrypt_url = "/decrypt/{}/".format(self.id)
-        auths = [{"name": a.name, "url": a.url} for a in self.auths.all()]
+        auths = [{"name": a.name, "url": a.url} for a in self.parent_voting.auths.all()]
 
         # first, we do the shuffle
         data = {"msgs": votes}
@@ -148,7 +176,7 @@ class Voting(models.Model):
 
     def do_postproc(self):
         tally = self.tally
-        options = self.question.options.all()
+        options = self.parent_voting.question.options.all()
 
         opts = []
         for opt in options:
@@ -167,10 +195,3 @@ class Voting(models.Model):
 
         self.postproc = postp
         self.save()
-
-    def __str__(self):
-        return self.name
-
-class ChildVoting(models.Model):
-    parent_voting = models.ForeignKey(Voting, on_delete=models.CASCADE, related_name='children')
-    group = models.OneToOneField(Group, on_delete=models.CASCADE, blank=True)

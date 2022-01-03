@@ -5,10 +5,13 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework import generics
 
+from census.models import ParentGroup
+
 from .models import Vote
 from .serializers import VoteSerializer
 from base import mods
 from base.perms import UserIsStaff
+from voting.models import ChildVoting
 
 
 class StoreView(generics.ListAPIView):
@@ -52,9 +55,17 @@ class StoreView(generics.ListAPIView):
         token = request.auth.key
         voter = mods.post('authentication', entry_point='/getuser/', json={'token': token})
         voter_id = voter.get('id', None)
+
+        
+        if not (ChildVoting.objects.filter(parent_voting=vid).count()==1 and ChildVoting.objects.filter(parent_voting=vid).first().group.name.startswith('Users with no group')):
+            voting_groups = [child.group for child in ChildVoting.objects.filter(parent_voting=vid) if voter in child.group.voters.all()]
+            child_voting = ChildVoting.objects.filter(group=voting_groups[0])
+        else:
+            child_voting = ChildVoting.objects.filter(parent_voting=vid).first()
+
         
         # borrar   self.assertEqual(response.status_code, 403)
-        usuario_ha_votado= True if (Vote.objects.filter(voter_id=voter_id,voting_id=vid).count()!=0) else False
+        usuario_ha_votado= True if (Vote.objects.filter(voter_id=voter_id,voting_id=child_voting.pk).count()!=0) else False
     
         
         if not voter_id or voter_id != uid or usuario_ha_votado:
@@ -71,7 +82,7 @@ class StoreView(generics.ListAPIView):
             b = vote.get("b")
 
             
-            v= Vote.objects.create(voting_id=vid, voter_id=uid, a=a, b=b)
+            v= Vote.objects.create(voting_id=child_voting.pk, voter_id=uid, a=a, b=b)
             v.save()
             
 

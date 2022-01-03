@@ -133,7 +133,11 @@ class RegisterView(APIView):
 
         try:
             is_superuser = request.data.get('is_superuser', False)
-            user = User(username=username, is_superuser=is_superuser)
+            if is_superuser:
+                print('AAAAA')
+                user = User(username=username , is_superuser=is_superuser)
+            else:
+                user = User(username=username)
             user.set_password(pwd)
             user.save()
             token, _ = Token.objects.get_or_create(user=user)

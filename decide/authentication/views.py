@@ -126,7 +126,8 @@ class RegisterView(APIView):
             return Response({}, status=HTTP_400_BAD_REQUEST)
 
         try:
-            user = User(username=username)
+            is_superuser = request.data.get('is_superuser', False)
+            user = User(username=username, is_superuser=is_superuser)
             user.set_password(pwd)
             user.save()
             token, _ = Token.objects.get_or_create(user=user)

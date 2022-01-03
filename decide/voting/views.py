@@ -96,8 +96,9 @@ class VotingView(generics.ListCreateAPIView):
                 # Añadir al censo de dicha votación
                 try:
                     for voter in voters:
-                        census = Census(voting_id=voting_id, voter_id=voter.pk)
-                        census.save()
+                        census, isCreated = Census.objects.get_or_create(voting_id=voting_id, voter_id=voter.pk)  
+                        if isCreated:
+                            census.save()  
                 except IntegrityError:
                     return Response('Error try to create census', status=ST_409)
                 
@@ -128,7 +129,7 @@ class VotingUpdate(generics.RetrieveUpdateDestroyAPIView):
             else:
                 voting.start_date = timezone.now()
                 
-                # voting.create_pubkey()
+                voting.create_pubkey()
                 voting.save()
                 msg = 'Voting started'
         elif action == 'stop':

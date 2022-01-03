@@ -20,13 +20,8 @@ from django.contrib.auth.forms import AuthenticationForm
 from authentication.forms import SignUpForm
 from django.contrib.auth import login, authenticate, logout
 from authentication.forms import *
-from authentication.import_and_export import * 
-from django.contrib import messages
 from django.http import HttpResponse
 from django.template.loader import render_to_string  
-import os
-from django.core.files.storage import default_storage
-from django.core.files.base import ContentFile
 from django.core.mail import EmailMessage  
 from .tokens import account_activation_token  
 import base64
@@ -213,10 +208,3 @@ def exportGroup(request):
 
     return render(request, 'export_group.html', {'form': form, 'STATIC_URL':settings.STATIC_URL})
 
-
-
-
-
-            
-
-    

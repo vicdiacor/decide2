@@ -1,6 +1,9 @@
-import logging as log
+from django.contrib.auth.models import User
+from django.http.response import HttpResponse
+from django.shortcuts import render
 from django.db.utils import IntegrityError
 from django.core.exceptions import ObjectDoesNotExist
+from django.views.generic.base import View
 from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework.status import (
@@ -10,11 +13,29 @@ from rest_framework.status import (
     HTTP_401_UNAUTHORIZED as ST_401,
     HTTP_409_CONFLICT as ST_409
 )
-
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 from base.perms import UserIsStaff
+from decide import settings
 from .models import Census, ParentGroup
+from .forms import GroupOperationsForm
 
-group_successfully_created = "Group successfully created"
+group_successfully_created = "Grupo creado con éxito"
+operations_template = 'group_operations.html'
+
+from django.views.generic.base import View
+from census.import_and_export import *
+from census.forms import *
+import os
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib import messages
+from django.http import HttpResponse
+from django.shortcuts import render
+from decide import settings
+
+
 
 
 class CensusCreate(generics.ListCreateAPIView):
@@ -56,10 +77,10 @@ class CensusDetail(generics.RetrieveDestroyAPIView):
         return Response('Valid voter')
 
 
-class GroupOperations(generics.CreateAPIView):
-    permission_classes = (permissions.IsAuthenticated,)
+class GroupOperationsAPI(generics.CreateAPIView):
+    permissions_classes = (permissions.IsAuthenticated,)
 
-    def check(self, user, group_name, groups, is_public):
+    def check(self, user, group_name, base_group, groups, is_public):
         if not group_name or not isinstance(group_name, str) or group_name.isspace():
             return Response('Group name is required', status=ST_400)
 
@@ -67,11 +88,20 @@ class GroupOperations(generics.CreateAPIView):
         if ParentGroup.objects.filter(name=group_name).exists():
             return Response(f'Group with name \'{group_name}\' already exists, please, try another name', status=ST_409)
 
-        if not groups or not isinstance(groups, list) or any(not isinstance(group, str) for group in groups) or len(groups) < 2:
-            return Response('Two groups are required at least', status=ST_400)
+        if not base_group or not isinstance(base_group, str):
+            return Response('Base group: str is required', status=ST_400)
+
+        if not groups or not isinstance(groups, list) or any(not isinstance(group, str) for group in groups) or len(groups) < 1:
+            return Response('groups: list[str] must have one group: str at least', status=ST_400)
 
         if not isinstance(is_public, bool):
-            return Response('If you wish the group to be private you must set \'is public\' attribute to false, otherwise set it to true', status=ST_400)
+            return Response('If you wish the group to be private you must set \'is_public\' attribute to false, otherwise set it to true', status=ST_400)
+
+        try:
+            if user not in ParentGroup.objects.get(name=base_group).voters.all():
+                return Response('User must be in all groups to perform this action', status=ST_401)
+        except ObjectDoesNotExist:
+            return Response(f'There is no group with name \'{base_group}\', please, try again', status=ST_400)
 
         for group in groups:
             try:
@@ -80,48 +110,166 @@ class GroupOperations(generics.CreateAPIView):
             except ObjectDoesNotExist:
                 return Response(f'There is no group with name \'{group}\', please, try again', status=ST_400)
 
+        if base_group in groups:
+            return Response('Base group must not be in groups', status=ST_400)
+
         return None
 
     def create(self, request, *args, **kwargs):
         group_name = request.data.get('name')
+        base_group = request.data.get('base_group')
         groups = request.data.get('groups')
         is_public = request.data.get('is_public')
         user = request.user
 
         response = self.check(
-            user=user, group_name=group_name, groups=groups, is_public=is_public)
+            user=user, group_name=group_name, base_group=base_group, groups=groups, is_public=is_public)
         if response:
             return response
 
-        new_group = ParentGroup.objects.create(
-            name=group_name.strip(), isPublic=is_public)
-            
+        base_group = ParentGroup.objects.get(name=base_group)
+        groups = [ParentGroup.objects.get(name=group) for group in groups]
+
         url = request.path.split('/census/')[1]
-        if url == 'union':
-            qs = self.union(groups)
-        elif url == 'intersection':
-            qs = self.intersection(groups)
-        elif url == 'difference':
-            qs = self.difference(groups)
-        new_group.voters.set(qs)
+
+        GroupOperations().operate(
+            group_name=group_name, base_group=base_group, groups=groups, is_public=is_public, operation=url)
+
         return Response(group_successfully_created, status=ST_201)
 
-    def union(self,  groups):
-        qs = ParentGroup.objects.get(name=groups[0]).voters.all()
-        for group in groups[1:]:
-            qs = qs.union(ParentGroup.objects.get(name=group).voters.all())
+
+class GroupOperations(View):
+
+    @method_decorator(login_required(login_url='/authentication/iniciar_sesion'))
+    def get(self, request, *args, **kwargs):
+        form = GroupOperationsForm()
+        form.fields['base_group'].queryset = request.user.parentgroup_set.all()
+        form.fields['groups'].queryset = request.user.parentgroup_set.all()
+        context = {'form': form, 'STATIC_URL': settings.STATIC_URL}
+        return render(request, operations_template, context=context)
+
+    @ method_decorator(login_required(login_url='/authentication/iniciar_sesion'))
+    def post(self, request, *args, **kwargs):
+        form = GroupOperationsForm(request.POST)
+        if form.is_valid():
+            cd = form.cleaned_data
+            self.operate(
+                cd['group_name'],
+                cd['base_group'],
+                cd['groups'],
+                cd['is_public'],
+                cd['operation'])
+            context = {'form': form, 'STATIC_URL': settings.STATIC_URL,
+                       'message': group_successfully_created}
+            return render(request, operations_template, context=context)
+        else:
+            form.fields['base_group'].queryset = request.user.parentgroup_set.all()
+            form.fields['groups'].queryset = request.user.parentgroup_set.all()
+            context = {'form': form, 'STATIC_URL': settings.STATIC_URL}
+            return render(request, operations_template, context=context)
+
+    def operate(self, group_name, base_group, groups, is_public, operation):
+        new_group: ParentGroup = ParentGroup.objects.create(
+            name=group_name, isPublic=is_public)
+        qs = User.objects.none()
+        if operation == 'union':
+            qs = self.union(base_group, groups)
+        elif operation == 'intersection':
+            qs = self.intersection(base_group, groups)
+        elif operation == 'difference':
+            qs = self.difference(base_group, groups)
+        new_group.voters.set(qs)
+
+    def union(self, base_group, groups):
+        qs = base_group.voters.all()
+        for group in groups:
+            qs = qs.union(group.voters.all())
         return qs
 
-    def intersection(self,  groups):
-        qs = ParentGroup.objects.get(name=groups[0]).voters.all()
-        for group in groups[1:]:
-            qs = qs.intersection(
-                ParentGroup.objects.get(name=group).voters.all())
+    def intersection(self, base_group, groups):
+        qs = base_group.voters.all()
+        for group in groups:
+            qs = qs.intersection(group.voters.all())
         return qs
 
-    def difference(self,  groups):
-        qs = ParentGroup.objects.get(name=groups[0]).voters.all()
-        for group in groups[1:]:
-            qs = qs.difference(
-                ParentGroup.objects.get(name=group).voters.all())
+    def difference(self, base_group, groups):
+        qs = base_group.voters.all()
+        for group in groups:
+            qs = qs.difference(group.voters.all())
         return qs
+
+
+
+
+
+
+class ImportExportGroup(View):
+    ### Importar/Exportar
+
+
+    FILE_PATH = 'authentication/files/'
+    FORMATS = {'excel':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'txt': 'text/plain'}
+
+
+    #@csrf_exempt
+    def importGroup(request):
+        form = importForm()
+
+        if request.method == 'POST':
+            form = importForm(request.POST, request.FILES)
+            if form.is_valid():
+                name = form.cleaned_data['name'] 
+                is_public = form.cleaned_data['is_public']
+                file = request.FILES['file']
+                format = file.content_type
+
+                users_list = []
+                # Si file es excel, guardo el archivo para abrirlo después
+                if (format == ImportExportGroup.FORMATS['excel']):
+                    path = default_storage.save(ImportExportGroup.FILE_PATH + 'temp_import.xlsx', ContentFile(file.read()))
+                    users_list = readExcelFile(path)
+                    os.remove(os.path.join(path))   # Borro el archivo tras su uso
+                # Si file es txt, no necesito guardar el fichero
+                elif (format == ImportExportGroup.FORMATS['txt']):
+                    users_list = readTxtFile(file)
+                else:
+                    messages.error(request, "Formato de archivo no válido.")
+                    return render(request, 'import_group.html', {'form': form, 'STATIC_URL':settings.STATIC_URL})
+
+                # Si todos los usuarios existen, creo el grupo y añado todos los usuarios de la lista
+                if (users_list != None):
+                    b = createGroup(name, users_list, is_public)
+                    # Si b==False, entonces ya existía un grupo con mismo nombre
+                    if (b):
+                        messages.success(request, "Grupo creado correctamente.")
+                    else:
+                        messages.success(request, "Grupo actualizado correctamente.")
+                else:
+                    messages.error(request, "Uno de los usuarios indicados no existe.")
+
+        return render(request, 'import_group.html', {'form': form, 'STATIC_URL':settings.STATIC_URL})
+            
+
+    #@csrf_exempt
+    def exportGroup(request):
+        form = exportForm()
+
+        if request.method == 'POST':
+            form = exportForm(request.POST, request.FILES)
+            if form.is_valid():
+                group = form.cleaned_data['group']
+                users = User.objects.filter(groups=group)
+                
+                # Crea el Excel con los usuarios exportados
+                writeInExcelUsernames(users, ImportExportGroup.FILE_PATH + 'temp_export.xlsx', 'temp_export.xlsx')
+                    
+                # Abrir el Excel generado
+                with open(ImportExportGroup.FILE_PATH + 'temp_export.xlsx', 'rb') as excel:
+                    data = excel.read()
+
+                # Automáticamente descarga el archivo
+                resp = HttpResponse(data, content_type=ImportExportGroup.FORMATS['excel'])
+                resp['Content-Disposition'] = 'attachment; filename=export_group.xlsx'
+                return resp
+
+        return render(request, 'export_group.html', {'form': form, 'STATIC_URL':settings.STATIC_URL})

@@ -65,7 +65,7 @@ class VotingAdmin(admin.ModelAdmin):
         super().save_model(request, obj, form, change)
 
         # Borro todos los censos de la votacion (actualizar la votacion)
-        voting_id = Voting.objects.all()[Voting.objects.all().count()-1].pk
+        voting_id = Voting.objects.get(pk=obj.pk).pk
         Census.objects.filter(voting_id=voting_id).delete()
 
         groups = obj.groups
@@ -81,10 +81,10 @@ class VotingAdmin(admin.ModelAdmin):
 
                 # Por cada usuario
                 # Añadir al censo de dicha votación
-                voting_id = Voting.objects.all()[Voting.objects.all().count()-1].pk
                 for voter in voters:
-                    census = Census(voting_id=voting_id, voter_id=voter.pk)
-                    census.save()                   
+                    census, isCreated = Census.objects.get_or_create(voting_id=voting_id, voter_id=voter.pk)  
+                    if isCreated:
+                        census.save()           
                     
 
 

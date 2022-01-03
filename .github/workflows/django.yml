@@ -9,6 +9,7 @@ on:
       CODACY_PROJECT_TOKEN:
         required: true
       HEROKU_API_KEY:
+        required: true
 
 jobs:
   build:
@@ -50,7 +51,7 @@ jobs:
           coverage-reports: decide/coverage.xml
   deploy:
       if: ${{github.ref == 'refs/heads/master' }}
-    needs: build
+      needs: build
     runs-on: ubuntu-latest
     steps:
     - run: heroku run -a egc-part-chullo-decide sh -c "python decide/manage.py shell -c \"from django.contrib.auth.models import User; User.objects.filter(username='admin') or User.objects.create_superuser('admin', 'admin@example.com', 'admin')\""

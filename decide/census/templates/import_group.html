@@ -1,19 +1,9 @@
-{% extends 'base.html' %}
+{% extends 'master.html' %}
 
-{% block encabezado %}
-<h1>Exportar grupo a Excel.</h1>
+{% block titulo %}
+<h1>Importar grupo desde Excel.</h1>
 {%endblock%}
 
-
-{% block style_css %}
-    .error { 
-        color:red 
-    }
-
-    .success {
-        color:green
-    }
-{% endblock %}
 
 {% block contenido %}
 
@@ -33,9 +23,9 @@
         {% endfor %}
     {% endif %}
 
-    <form id='form' method='post' action=''>{% csrf_token %}
+    <form id='form' enctype='multipart/form-data' method='post' action=''>{% csrf_token %}
         <table>{{form}}</table>
-        <p><input type='submit' value='Exportar' /></p>
+        <p><input type='submit' value='Importar' /></p>
     </form>
 
 {% endblock %}

@@ -8,7 +8,7 @@ from .models import Voting
 from .filters import StartedFilter
 
 from django.contrib.auth.models import User, Group
-from census.models import Census
+from census.models import Census, ParentGroup
 
 
 
@@ -63,6 +63,8 @@ class VotingAdmin(admin.ModelAdmin):
         # Comprueba que el id del grupo no es null o blank
         if (groups != '' and groups!=None): 
             groupsIds = list(groups.split(','))
+        
+
 
         # Obtener todos los usuarios que pertenecen al grupo
             for id in groupsIds:
@@ -77,6 +79,10 @@ class VotingAdmin(admin.ModelAdmin):
                     census, isCreated = Census.objects.get_or_create(voting_id=voting_id, voter_id=voter.pk)  
                     if isCreated:
                         census.save()  
+        else:
+            group = ParentGroup.objects.create(name="Users with no group", isPublic=True)
+            child = ChildVoting.objects.create(parent_voting=obj, group=group)
+
 
 class ChildVotingAdmin(admin.ModelAdmin):
     list_display = ('parent_voting', 'group')

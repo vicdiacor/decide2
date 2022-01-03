@@ -173,4 +173,4 @@ class Voting(models.Model):
 
 class ChildVoting(models.Model):
     parent_voting = models.ForeignKey(Voting, on_delete=models.CASCADE, related_name='children')
-    group = models.OneToOneField(Group, on_delete=models.CASCADE)
+    group = models.OneToOneField(Group, on_delete=models.CASCADE, blank=True)

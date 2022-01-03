@@ -290,10 +290,13 @@ class joinGroup(APIView):
             try:
                 group = ParentGroup.objects.get(pk=id_group)
                 user = User.objects.get(pk=id_user)
-                voters = User.objects.filter(groups=group)
+                voters = group.voters.all()
                 userIsInTheGroup= user in voters
+
+                print(group.voters)
                 # Añadir usuario al grupo 
                 if group!=None and user!= None and not userIsInTheGroup: #Comprobar también que el usuario no está ya en el grupo....
+                    
                     if group.isPublic:
                         
                         group.voters.add(user)

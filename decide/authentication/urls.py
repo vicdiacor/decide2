@@ -13,7 +13,7 @@ urlpatterns = [
     path('logout/', LogoutView.as_view()),
     path('getuser/', GetUserView.as_view()),
     path('register/', RegisterView.as_view()),
-    path('userVotings/<int:voterId>', UserVotings),
+    path('userVotings/', UserVotings),
     path('activate/<id>/<token>/', activate, name='activate'), 
 ]
     

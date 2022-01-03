@@ -35,7 +35,7 @@
 
                 <li><a href='/census/groups/import'>Importar grupo desde Excel.</a></li>
                 <li><a href='/census/groups/export'>Exportar miembros de un grupo a Excel.</a></li>
-
+              
                 {% if user.is_superuser%}
                 <li><a href="/admin">Zona de administración</a></li>
                 {%else%}
@@ -49,6 +49,7 @@
                         </ul>
                     </div>
                 </li>
+                <li><a href='/authentication/userVotings'>Mis votaciones</a></li>
                 <li><a href="/census/operations">Operaciones entre grupos</a></li>
 
                 {%else %}

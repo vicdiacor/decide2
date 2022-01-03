@@ -162,6 +162,7 @@ def UserVotings(request):
         'total':cens, 
         'abiertas':votAbiertas, 
         'cerradas':votCerradas,
-        'pendientes':votPendientes
+        'pendientes':votPendientes,
+        'STATIC_URL':settings.STATIC_URL
         }        
     return render(request,'view_voting.html',context)

@@ -14,7 +14,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait 
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
-
+from time import sleep
 
 class SeleniumTestCase(SeleniumBaseTestCase):
 
@@ -127,6 +127,7 @@ class SeleniumTestCase(SeleniumBaseTestCase):
         self.login()
         self.driver.find_element_by_link_text('Votes').click()
         votes_sent= self.driver.find_elements_by_link_text('500: 101')
+        # sleep(1000)
         self.assertEquals(len(votes_sent), 1)
         
         votes_sent[0].click()
@@ -137,8 +138,8 @@ class SeleniumTestCase(SeleniumBaseTestCase):
 
         self.assertEquals(voting_id,"500")
         self.assertEquals(voter_id,"101")
-        self.assertTrue(a_encrypted!="" and len(a_encrypted)==77)
-        self.assertTrue(b_encrypted!="" and len(a_encrypted)==77)
+        self.assertTrue(len(a_encrypted)==77)
+        self.assertTrue(len(b_encrypted)==77)
     
     def test_booth_multiple_option_vote(self):
 
@@ -204,8 +205,8 @@ class SeleniumTestCase(SeleniumBaseTestCase):
 
         self.assertEquals(voting_id,"501")
         self.assertEquals(voter_id,"101")
-        self.assertTrue(a_encrypted!="")
-        self.assertTrue(b_encrypted!="")
+        self.assertTrue(len(a_encrypted)==77)
+        self.assertTrue(len(b_encrypted)==77)
         
         # Segundo voto correctamente guardado y encriptado
         self.driver.find_element_by_link_text('Votes').click()
@@ -218,8 +219,8 @@ class SeleniumTestCase(SeleniumBaseTestCase):
 
         self.assertEquals(voting_id,"501")
         self.assertEquals(voter_id,"101")
-        self.assertTrue(a_encrypted!="" and len(a_encrypted)==77)
-        self.assertTrue(b_encrypted!="" and len(a_encrypted)==77)
+        self.assertTrue(len(a_encrypted)==77)
+        self.assertTrue(len(b_encrypted)==77)
 
 
 

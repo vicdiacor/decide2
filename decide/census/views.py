@@ -118,7 +118,7 @@ class GroupOperationsAPI(generics.CreateAPIView):
             except ObjectDoesNotExist:
                 return Response(f'There is no group with name \'{group}\', please, try again', status=ST_400)
 
-               if base_group in groups:
+        if base_group in groups:
             return Response('Base group must not be in groups', status=ST_400)
 
         return None
@@ -323,5 +323,4 @@ class GroupsView(TemplateView):
         context['KEYBITS'] = settings.KEYBITS
 
         return context
-=======
  

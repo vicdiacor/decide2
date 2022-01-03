@@ -389,7 +389,6 @@ class VotingTestCase(BaseTestCase):
         numUsersInCensus = Census.objects.filter(voting_id=voting.pk).count()
         self.assertEqual(numUsersInCensus, 3)
 
-
 class SeleniumTestCase(SeleniumBaseTestCase):    
 
     def setUp(self):

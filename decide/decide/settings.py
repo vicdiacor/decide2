@@ -185,9 +185,12 @@ except ImportError:
     BASEURL =  'https://egc-part-chullo-decide.herokuapp.com/'
 
     DATABASES = dict()
+    NOSE_ARGS = [
+    '--with-xunit'
+    ]
 
     DATABASES['default'] =  dj_database_url.config()
-    django_heroku.settings(locals())
+    django_heroku.settings(locals(), test_runner=False)
     print("local_settings.py not found")
 
 # loading jsonnet config

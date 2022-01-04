@@ -11,6 +11,13 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 """
 
 import os
+import django_heroku
+import dj_database_url
+
+import environ
+
+env = environ.Env()
+environ.Env.read_env()
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -38,7 +45,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'scheduler.apps.SchedulerConfig',
-
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.discord',
+    'allauth.socialaccount.providers.github',
     'corsheaders',
     'django_filters',
     'rest_framework',
@@ -46,6 +58,11 @@ INSTALLED_APPS = [
     'rest_framework_swagger',
     'gateway',
 ]
+
+SITE_ID = 1
+ACCOUNT_EMAIL_VERIFICATION = "none"
+LOGIN_REDIRECT_URL = "home"
+ACCOUNT_LOGOUT_ON_GET = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -57,6 +74,7 @@ REST_FRAMEWORK = {
 
 AUTHENTICATION_BACKENDS = [
     'base.backends.AuthBackend',
+    "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
 MODULES = [
@@ -72,7 +90,7 @@ MODULES = [
     'scheduler',
 ]
 
-BASEURL = 'http://localhost:8000'
+BASEURL = 'http://127.0.0.1:8000'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -175,6 +193,24 @@ DEFAULT_VERSION = 'v1'
 try:
     from local_settings import *
 except ImportError:
+    APIS = {
+    'authentication': 'https://egc-part-chullo-decide.herokuapp.com/',
+    'base': 'https://egc-part-chullo-decide.herokuapp.com/',
+    'booth': 'https://egc-part-chullo-decide.herokuapp.com/',
+    'census': 'https://egc-part-chullo-decide.herokuapp.com/',
+    'mixnet': 'https://egc-part-chullo-decide.herokuapp.com/',
+    'postproc': 'https://egc-part-chullo-decide.herokuapp.com/',
+    'store': 'https://egc-part-chullo-decide.herokuapp.com/',
+    'visualizer': 'https://egc-part-chullo-decide.herokuapp.com/',
+    'voting': 'https://egc-part-chullo-decide.herokuapp.com/',
+    }
+
+    BASEURL =  'https://egc-part-chullo-decide.herokuapp.com/'
+
+    DATABASES = dict()
+
+    DATABASES['default'] =  dj_database_url.config()
+    django_heroku.settings(locals())
     print("local_settings.py not found")
 
 # loading jsonnet config
@@ -187,3 +223,29 @@ if os.path.exists("config.jsonnet"):
 
 
 INSTALLED_APPS = INSTALLED_APPS + MODULES
+
+EMAIL_USE_TLS = True  
+EMAIL_HOST = env('EMAIL_HOST')
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+EMAIL_PORT = 587
+
+
+
+SOCIALACCOUNT_PROVIDERS = {
+    'discord': {
+        'APP': {
+            'client_id': env('client_id_discord'),
+            'secret': env('secret_key_discord'),
+            'key': ''
+        }
+    },
+    
+    'github': {
+        'APP': {
+            'client_id': env('client_id_github'),
+            'secret': env('secret_key_github'),
+            'key': ''
+        }
+    }
+}

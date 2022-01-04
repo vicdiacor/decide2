@@ -212,7 +212,7 @@ class ImportExportGroup(View):
     FORMATS = {'excel':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'txt': 'text/plain'}
 
 
-    #@csrf_exempt
+    @csrf_exempt
     @login_required(login_url='/authentication/iniciar_sesion')
     def importGroup(request):
         form = importForm()
@@ -255,7 +255,7 @@ class ImportExportGroup(View):
         return render(request, 'import_group.html', {'form': form, 'STATIC_URL':settings.STATIC_URL})
             
 
-    #@csrf_exempt
+    @csrf_exempt
     @login_required(login_url='/authentication/iniciar_sesion')
     def exportGroup(request):
         form = exportForm()

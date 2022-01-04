@@ -132,79 +132,15 @@ class RegisterView(APIView):
             return Response({}, status=HTTP_400_BAD_REQUEST)
 
         try:
-            user = User(username=username)
+            is_superuser = request.data.get('is_superuser', False)
+            if is_superuser:
+                print('AAAAA')
+                user = User(username=username , is_superuser=is_superuser)
+            else:
+                user = User(username=username)
             user.set_password(pwd)
             user.save()
             token, _ = Token.objects.get_or_create(user=user)
         except IntegrityError:
             return Response({}, status=HTTP_400_BAD_REQUEST)
         return Response({'user_pk': user.pk, 'token': token.key}, HTTP_201_CREATED)
-
-### Importar/Exportar
-
-
-FILE_PATH = 'authentication/files/'
-FORMATS = {'excel':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'txt': 'text/plain'}
-
-
-def importGroup(request):
-    form = importForm()
-
-    if request.method == 'POST':
-        form = importForm(request.POST, request.FILES)
-        if form.is_valid():
-            name = form.cleaned_data['name'] 
-            file = request.FILES['file']
-            format = file.content_type
-
-            users_list = []
-            # Si file es excel, guardo el archivo para abrirlo después
-            if (format == FORMATS['excel']):
-                path = default_storage.save(FILE_PATH + 'temp_import.xlsx', ContentFile(file.read()))
-                users_list = readExcelFile(path)
-                os.remove(os.path.join(path))   # Borro el archivo tras su uso
-            # Si file es txt, no necesito guardar el fichero
-            elif (format == FORMATS['txt']):
-                users_list = readTxtFile(file)
-            else:
-                messages.error(request, "Formato de archivo no válido.")
-                return render(request, 'import_group.html', {'form': form, 'STATIC_URL':settings.STATIC_URL})
-
-            # Si todos los usuarios existen, creo el grupo y añado todos los usuarios de la lista
-            if (users_list != None):
-                b = createGroup(name, users_list)
-                # Si b==False, entonces ya existía un grupo con mismo nombre
-                if (b):
-                    messages.success(request, "Grupo creado correctamente.")
-                else:
-                    messages.error(request, "Ya existe un grupo con el mismo nombre.")
-            else:
-                messages.error(request, "Uno de los usuarios indicados no existe.")
-
-    return render(request, 'import_group.html', {'form': form, 'STATIC_URL':settings.STATIC_URL})
-        
-
-
-def exportGroup(request):
-    form = exportForm()
-
-    if request.method == 'POST':
-        form = exportForm(request.POST, request.FILES)
-        if form.is_valid():
-            group = form.cleaned_data['group']
-            users = User.objects.filter(groups=group)
-            
-            # Crea el Excel con los usuarios exportados
-            writeInExcelUsernames(users, FILE_PATH + 'temp_export.xlsx', 'temp_export.xlsx')
-                
-            # Abrir el Excel generado
-            with open(FILE_PATH + 'temp_export.xlsx', 'rb') as excel:
-                data = excel.read()
-
-            # Automáticamente descarga el archivo
-            resp = HttpResponse(data, content_type=FORMATS['excel'])
-            resp['Content-Disposition'] = 'attachment; filename=export_group.xlsx'
-            return resp
-
-    return render(request, 'export_group.html', {'form': form, 'STATIC_URL':settings.STATIC_URL})
-

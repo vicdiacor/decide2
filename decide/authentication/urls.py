@@ -1,6 +1,6 @@
 from django.urls import path
 from rest_framework.authtoken.views import obtain_auth_token
-from .views import GetUserView, LogoutView, RegisterView, UserVotings
+from .views import GetUserView, LogoutView, RegisterView
 from authentication.views import *
 
 
@@ -13,7 +13,6 @@ urlpatterns = [
     path('logout/', LogoutView.as_view()),
     path('getuser/', GetUserView.as_view()),
     path('register/', RegisterView.as_view()),
-    path('userVotings/', UserVotings),
     path('activate/<id>/<token>/', activate, name='activate'), 
 ]
     

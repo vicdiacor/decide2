@@ -1,6 +1,7 @@
 {% extends 'master.html'%}
 
 {% block contenido %}
+{% if user.is_authenticated %}
 <div>
 </ul> El usuario {{voter}} tiene {{abiertas|length}} votaciones abiertas, {{cerradas|length}} cerradas y {{pendientes|length}} votaciones esperando a comenzar
 <p>Votaciones que aún no han comenzado:</p>
@@ -23,4 +24,7 @@
     {% endfor %} 
 </ul> 
 </div>
+{% else %}
+Necesitas iniciar sesión para ver esta página
+{% endif %}
 {% endblock %}

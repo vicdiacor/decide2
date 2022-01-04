@@ -34,6 +34,8 @@ from django.contrib import messages
 from django.http import HttpResponse
 from django.shortcuts import render
 from decide import settings
+from voting.models import Voting
+
 
 
 
@@ -273,3 +275,28 @@ class ImportExportGroup(View):
                 return resp
 
         return render(request, 'export_group.html', {'form': form, 'STATIC_URL':settings.STATIC_URL})
+
+def UserVotings(request):
+    voterId=request.user.id
+    voter = request.user.username
+    cens = Census.objects.filter(voter_id=voterId).values_list('voting_id',flat=True)
+    votAbiertas = []
+    votCerradas = []
+    votPendientes = []
+    for i in cens:
+        votacion = Voting.objects.get(id=i)
+        if (votacion.start_date==None):
+            votPendientes.append(i)
+        elif(votacion.end_date==None):
+            votAbiertas.append(i)
+        else:
+            votCerradas.append(i)
+    context = {
+        'voter': voter,
+        'total':cens, 
+        'abiertas':votAbiertas, 
+        'cerradas':votCerradas,
+        'pendientes':votPendientes,
+        'STATIC_URL':settings.STATIC_URL
+        }        
+    return render(request,'view_voting.html',context)

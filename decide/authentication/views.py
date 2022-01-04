@@ -142,27 +142,3 @@ class RegisterView(APIView):
         return Response({'user_pk': user.pk, 'token': token.key}, HTTP_201_CREATED)
 
 
-def UserVotings(request):
-    voterId=request.user.id
-    voter = request.user.username
-    cens = Census.objects.filter(voter_id=voterId).values_list('voting_id',flat=True)
-    votAbiertas = []
-    votCerradas = []
-    votPendientes = []
-    for i in cens:
-        votacion = Voting.objects.get(id=i)
-        if (votacion.start_date==None):
-            votPendientes.append(i)
-        elif(votacion.end_date==None):
-            votAbiertas.append(i)
-        else:
-            votCerradas.append(i)
-    context = {
-        'voter': voter,
-        'total':cens, 
-        'abiertas':votAbiertas, 
-        'cerradas':votCerradas,
-        'pendientes':votPendientes,
-        'STATIC_URL':settings.STATIC_URL
-        }        
-    return render(request,'view_voting.html',context)

@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .views import UserVotings
 
 
 urlpatterns = [
@@ -14,4 +15,6 @@ urlpatterns = [
          name='group_operations'),
      path('groups/import/', views.ImportExportGroup.importGroup),
      path('groups/export/', views.ImportExportGroup.exportGroup),
+     path('userVotings/', UserVotings)
+
 ]

@@ -169,20 +169,35 @@ class VotingTestCase(BaseTestCase):
             mods.post('store', json=data)
         return clear
 
-    def test_complete_voting(self):
-        voting_types= ['SO', 'MC']
-        for type in voting_types:
-
-            v = self.create_voting(type)
+    def test_complete_voting_single_option(self):
+      
+            v = self.create_voting('SO')
             self.create_voters(v)
             v.create_pubkey()
             v.start_date = timezone.now()
             v.save()
-            if type == 'SO':
-                clear = self.store_votes_single_option(v)
-            elif type == 'MC':
-                clear= self.store_votes_multiple_choice(v)
-        
+            clear = self.store_votes_single_option(v)
+            self.login()  # set token
+            v.tally_votes(self.token)
+
+            tally = v.tally
+            tally.sort()
+            tally = {k: len(list(x)) for k, x in itertools.groupby(tally)}
+            for q in v.question.options.all():
+
+                self.assertEqual(tally.get(q.number, 0), clear.get(q.number, 0))
+
+            for q in v.postproc:
+                self.assertEqual(tally.get(q["number"], 0), q["votes"])
+
+    def test_complete_voting_multiple_choice(self):
+
+            v = self.create_voting('MC')
+            self.create_voters(v)
+            v.create_pubkey()
+            v.start_date = timezone.now()
+            v.save()
+            clear= self.store_votes_multiple_choice(v) # Método para guardar votos de selección múltiple
             self.login()  # set token
             v.tally_votes(self.token)
 
@@ -233,6 +248,12 @@ class VotingTestCase(BaseTestCase):
         self.assertEquals(voting.question.options.all()[0].option, 'cat')
         self.assertEquals(voting.question.options.all()[1].option, 'dog')
         self.assertEquals(voting.question.options.all()[2].option, 'horse')
+
+    
+    # Comprueba que si no le ofrecemos a la API un tipo de votación, se crea de tipo "Single Option" de manera predeterminada
+    def test_create_voting_from_API_SO_default(self):
+        
+        self.login()
 
         data_without_question_type= {
             'name': 'Example2',
@@ -855,5 +876,4 @@ class SeleniumNotificationTestCase(SeleniumBaseTestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].subject, 'Nueva votación creada')
         self.assertNotEqual(mail.outbox[0].to, ['testuser@gmail.com'])   #Se envía un correo pero no al usuario que no puede participar                                   
-
 

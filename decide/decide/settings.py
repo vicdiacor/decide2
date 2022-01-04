@@ -14,6 +14,11 @@ import os
 import django_heroku
 import dj_database_url
 
+import environ
+
+env = environ.Env()
+environ.Env.read_env()
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -220,27 +225,26 @@ if os.path.exists("config.jsonnet"):
 INSTALLED_APPS = INSTALLED_APPS + MODULES
 
 EMAIL_USE_TLS = True  
-EMAIL_HOST = 'smtp.gmail.com'  
-EMAIL_HOST_USER = 'decidepartchullo@gmail.com'  
-EMAIL_HOST_PASSWORD = 'decide1234%'  
+EMAIL_HOST = env('EMAIL_HOST')
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
 EMAIL_PORT = 587
 
 
-#Pongo las credenciales de las APIs aquí a pesar de que es inseguro
-#para facilitar el trabajo de mis compañeros al ser un proyecto educativo. Estos datos no deberían aparecer aquí por seguridad
+
 SOCIALACCOUNT_PROVIDERS = {
     'discord': {
         'APP': {
-            'client_id': '926861240196816987',
-            'secret': 'yt6rWIVZP35OPAqGpNFxvkjpt9d27naG',
+            'client_id': env('client_id_discord'),
+            'secret': env('secret_key_discord'),
             'key': ''
         }
     },
     
     'github': {
         'APP': {
-            'client_id': '1058f9ffecc2528581d6',
-            'secret': '36d7a3339c7a19965d3cac1e860882d405fbf67a',
+            'client_id': env('client_id_github'),
+            'secret': env('secret_key_github'),
             'key': ''
         }
     }

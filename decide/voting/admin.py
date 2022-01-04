@@ -68,7 +68,7 @@ class VotingAdmin(admin.ModelAdmin):
 
         # Obtener todos los usuarios que pertenecen al grupo
             for id in groupsIds:
-                group = Group.objects.get(pk=int(id))
+                group = ParentGroup.objects.get(pk=int(id))
                 child = ChildVoting.objects.create(parent_voting=obj, group=group)
                 child.save()
                 voters = User.objects.filter(groups=group)

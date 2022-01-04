@@ -81,7 +81,7 @@ class Voting(models.Model):
             ids = list(self.groups.split(","))
             for id in ids:
                 try:
-                    Group.objects.get(pk=int(id))
+                    ParentGroup.objects.get(pk=int(id))
                 except:
                     raise ValidationError('One o more groups do not exist.')
 
@@ -148,8 +148,8 @@ class ChildVoting(models.Model):
         votes = self.get_votes(token)
 
         auth = self.parent_voting.auths.first()
-        shuffle_url = "/shuffle/{}/".format(self.id)
-        decrypt_url = "/decrypt/{}/".format(self.id)
+        shuffle_url = "/shuffle/{}/".format(self.parent_voting.pk)
+        decrypt_url = "/decrypt/{}/".format(self.parent_voting.pk)
         auths = [{"name": a.name, "url": a.url} for a in self.parent_voting.auths.all()]
 
         # first, we do the shuffle

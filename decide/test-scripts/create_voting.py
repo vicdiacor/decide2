@@ -9,8 +9,8 @@ import random
 
 
 HOST = "http://127.0.0.1:8000"
-USER = "decide1"
-PASS = "decide1234"
+USER = "admin"
+PASS = "admin1234"
 
 def login(user=USER, password=PASS):
     data = {'username': user, 'password': password}
@@ -83,7 +83,7 @@ def vote(filename):
 
     print('Votaciones: ')
     options = webdriver.ChromeOptions()
-    options.headless = True
+    #options.headless = True
     driver = webdriver.Chrome(options=options)
     for username, password in voters.items():
         print(f'{username} está votando...')

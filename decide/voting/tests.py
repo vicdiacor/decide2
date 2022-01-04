@@ -17,7 +17,7 @@ from census.models import Census
 from mixnet.mixcrypt import ElGamal
 from mixnet.mixcrypt import MixCrypt
 from mixnet.models import Auth
-from voting.models import Voting, Question, QuestionOption
+from voting.models import ChildVoting, Voting, Question, QuestionOption
 from base.tests import SeleniumBaseTestCase
 import re
 from selenium.webdriver.support.ui import Select
@@ -516,3 +516,38 @@ class SeleniumTestCase(SeleniumBaseTestCase):
         self.driver.find_element_by_name('_save').click()        
         
         self.driver.find_element_by_class_name('errornote')
+
+class ChildVotingTestCase(BaseTestCase):
+
+    def setUp(self):
+        # Crea un grupo con dos usuarios y otro con un usuario para probar el funcionamiento de los grupos en las votaciones
+        g1 = Group(name='Grupo 1', pk=100)
+        g1.save()
+
+        g2 = Group(name='Grupo 2', pk=101)
+        g2.save()
+
+        u1 = User(username='username1Grupo1', password='password')
+        u1.save()
+        u1.groups.set([g1])
+        u1.save()
+
+        u2 = User(username='username2Grupo1', password='password')
+        u2.save()
+        u2.groups.set([g1])
+        u2.save()
+
+        u3 = User(username='username3Grupo2', password='password')
+        u3.save()
+        u3.groups.set([g2])
+        u3.save()
+
+        super().setUp()
+
+    def tearDown(self):
+        super().tearDown()
+    
+    def test_create_voting_one_child_voting(self):
+        v = VotingTestCase.create_voting(self, 'SO')
+        self.assertEqual(v.name, 'test voting')
+        

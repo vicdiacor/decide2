@@ -11,5 +11,6 @@ urlpatterns = [
          name='group_intersection'),
     path('difference', views.GroupOperations.GroupDifference.as_view(),
          name='group_difference'),
-     path('groupList', GroupsView.as_view())
+    path('groupList', GroupsView.as_view()),
+    path('joinGroup/', views.joinGroup.as_view()),
 ]

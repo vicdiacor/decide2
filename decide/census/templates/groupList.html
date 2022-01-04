@@ -182,7 +182,7 @@
                         group_to_join: this.selected,
                         token: this.token
                     }
-                    this.postData("{% url "gateway" "census" "/" %}", data)
+                    this.postData("{% url "gateway" "census"  "/joinGroup/" %}", data)
                         .then(data => {
                             this.showAlert("success", '{% trans "Congratulations!" %}');
                         })

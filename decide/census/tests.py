@@ -4,10 +4,14 @@ from django.test import TestCase, Client
 
 from rest_framework.test import APIClient
 
-from .models import Census, ParentGroup
+from .models import Census, ParentGroup, Request
 from base import mods
 from base.tests import BaseTestCase
 import logging as log
+from base.tests import SeleniumBaseTestCase
+import re
+from selenium.webdriver.support.ui import Select
+from mixnet.models import Auth
 
 
 class CensusTestCase(BaseTestCase):
@@ -287,3 +291,102 @@ class GroupOperationsTestCases(BaseTestCase):
 
         difference = Group.objects.get(name='difference')
         self.assertEquals(len(difference.user_set.all()), 1)
+
+class PositiveRequestSeleniumTestCase(SeleniumBaseTestCase):    
+
+    def setUp(self):
+
+        u1 = User(username='username1Grupo1', password='password')
+        u1.save()
+
+        pg1 = ParentGroup(name='Grupo 1', pk=100, isPublic=False)
+        pg1.save()
+
+        rq1 = Request(voter_id=u1.pk, group_id=100)
+        rq1.save()
+
+        rq2 = Request(voter_id=u1.pk, group_id=100)
+        rq2.save()
+
+        rq3 = Request(voter_id=u1.pk, group_id=100)
+        rq3.save()
+
+        return super().setUp()
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_accept_private_request(self):
+        self.login()
+        self.driver.get(f'{self.live_server_url}/admin/census/request/')
+        self.driver.find_element_by_css_selector(".row1 .action-select").click()
+        dropdown = self.driver.find_element_by_name("action")
+        dropdown.find_element_by_xpath("//option[. = 'Accept']").click()
+        self.driver.find_element_by_name("index").click()
+        self.assertEquals(self.driver.find_element_by_css_selector(".row1 .field-request_status").text, "ACCEPTED")
+        
+    def test_accept_private_request_check_delete_others(self):
+        self.login()
+        self.driver.get(f'{self.live_server_url}/admin/census/request/')
+        self.driver.find_element_by_css_selector(".row1 .action-select").click()
+        dropdown = self.driver.find_element_by_name("action")
+        dropdown.find_element_by_xpath("//option[. = 'Accept']").click()
+        self.driver.find_element_by_name("index").click()
+        rows = self.driver.find_elements_by_xpath("//table/tbody/tr")
+        self.assertEquals(len(rows), 1)
+
+    def test_reject_private_request(self):
+        self.login()
+        self.driver.get(f'{self.live_server_url}/admin/census/request/')
+        self.driver.find_element_by_css_selector(".row1 .action-select").click()
+        dropdown = self.driver.find_element_by_name("action")
+        dropdown.find_element_by_xpath("//option[. = 'Reject']").click()
+        self.driver.find_element_by_name("index").click()
+        self.assertEquals(self.driver.find_element_by_css_selector(".row1 .field-request_status").text, "REJECTED")
+        
+    def test_reject_private_request_check_delete_others(self):
+        self.login()
+        self.driver.get(f'{self.live_server_url}/admin/census/request/')
+        self.driver.find_element_by_css_selector(".row1 .action-select").click()
+        dropdown = self.driver.find_element_by_name("action")
+        dropdown.find_element_by_xpath("//option[. = 'Reject']").click()
+        self.driver.find_element_by_name("index").click()
+        rows = self.driver.find_elements_by_xpath("//table/tbody/tr")
+        self.assertEquals(len(rows), 1)
+        
+        
+class NegativeRequestSeleniumTestCase(SeleniumBaseTestCase):    
+
+    def setUp(self):
+
+        u1 = User(username='username1Grupo1', password='password')
+        u1.save()
+
+        pg1 = ParentGroup(name='Grupo 1', pk=100, isPublic=True)
+        pg1.save()
+
+        rq1 = Request(voter_id=u1.pk, group_id=100)
+        rq1.save()
+
+        return super().setUp()
+
+    def tearDown(self):
+        super().tearDown()
+
+    def test_accept_private_request(self):
+        self.login()
+        self.driver.get(f'{self.live_server_url}/admin/census/request/')
+        self.driver.find_element_by_css_selector(".row1 .action-select").click()
+        dropdown = self.driver.find_element_by_name("action")
+        dropdown.find_element_by_xpath("//option[. = 'Accept']").click()
+        self.driver.find_element_by_name("index").click()
+        self.assertEquals(self.driver.find_element_by_css_selector(".row1 .field-request_status").text, "PENDING")
+        
+    def test_reject_private_request(self):
+        self.login()
+        self.driver.get(f'{self.live_server_url}/admin/census/request/')
+        self.driver.find_element_by_css_selector(".row1 .action-select").click()
+        dropdown = self.driver.find_element_by_name("action")
+        dropdown.find_element_by_xpath("//option[. = 'Reject']").click()
+        self.driver.find_element_by_name("index").click()
+        self.assertEquals(self.driver.find_element_by_css_selector(".row1 .field-request_status").text, "PENDING")

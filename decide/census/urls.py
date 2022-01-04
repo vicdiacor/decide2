@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from .views import GroupsView
 
 
 urlpatterns = [
@@ -14,4 +15,7 @@ urlpatterns = [
          name='group_operations'),
      path('groups/import/', views.ImportExportGroup.importGroup),
      path('groups/export/', views.ImportExportGroup.exportGroup),
+     path('groupList', GroupsView.as_view()),
+     path('joinGroup/', views.joinGroup.as_view()),
+
 ]

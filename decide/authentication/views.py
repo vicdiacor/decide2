@@ -12,10 +12,11 @@ from rest_framework.status import (
 from django.contrib.sites.shortcuts import get_current_site  
 from rest_framework.views import APIView
 from rest_framework.authtoken.models import Token
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, render
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ViewDoesNotExist
+
 from .serializers import UserSerializer
 from django.contrib.auth.forms import AuthenticationForm
 from authentication.forms import SignUpForm
@@ -26,6 +27,11 @@ from django.template.loader import render_to_string
 from django.core.mail import EmailMessage  
 from .tokens import account_activation_token  
 import base64
+
+from voting.models import Voting
+from census.models import Census
+
+
 
 #Validación formulario y envío de email
 def inicio_registro(request):
@@ -128,7 +134,12 @@ class RegisterView(APIView):
             return Response({}, status=HTTP_400_BAD_REQUEST)
 
         try:
-            user = User(username=username)
+            is_superuser = request.data.get('is_superuser', False)
+            if is_superuser:
+                print('AAAAA')
+                user = User(username=username , is_superuser=is_superuser)
+            else:
+                user = User(username=username)
             user.set_password(pwd)
             user.save()
             token, _ = Token.objects.get_or_create(user=user)

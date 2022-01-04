@@ -7,7 +7,7 @@ on:
 
 jobs:
   buildTest:
-    uses: decide-part-chullo/decide/.github/workflows/django.yml@master
+    uses: decide-part-chullo/decide/.github/workflows/django.yml@practica/79-actions
     secrets: 
       CODACY_PROJECT_TOKEN: ${{secrets.CODACY_PROJECT_TOKEN}}
       HEROKU_API_KEY: ${{secrets.HEROKU_API_KEY}}

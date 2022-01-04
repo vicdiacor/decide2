@@ -1,11 +1,20 @@
-from django.contrib.auth.models import User
+import logging as log
+import json
+from django.http import Http404
+from rest_framework import status
+from rest_framework.views import APIView
+from django.contrib.auth.models import User,Group
 from django.http.response import HttpResponse
 from django.shortcuts import render
+
 from django.db.utils import IntegrityError
+from django.views.generic import TemplateView
+from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.generic.base import View
 from rest_framework import generics, permissions
 from rest_framework.response import Response
+from .serializers import ParentGroupSerializer
 from rest_framework.status import (
     HTTP_201_CREATED as ST_201,
     HTTP_204_NO_CONTENT as ST_204,
@@ -37,10 +46,9 @@ from django.shortcuts import render
 from decide import settings
 
 
-
-
 class CensusCreate(generics.ListCreateAPIView):
     permission_classes = (UserIsStaff,)
+    
 
     def create(self, request, *args, **kwargs):
         voting_id = request.data.get('voting_id')
@@ -200,10 +208,6 @@ class GroupOperations(View):
         return qs
 
 
-
-
-
-
 class ImportExportGroup(View):
     ### Importar/Exportar
 
@@ -282,3 +286,53 @@ class ImportExportGroup(View):
                 return resp
 
         return render(request, 'export_group.html', {'form': form, 'STATIC_URL':settings.STATIC_URL})
+
+
+# Listado de grupos públicos y privados
+class joinGroup(APIView):
+    
+    def post(self, request):
+            #Obtener grupo y usuario
+            id_group= int(request.data.get('group_to_join'))        
+            id_user= int(request.data.get('userId'))
+
+            try:
+                group = ParentGroup.objects.get(pk=id_group)
+                user = User.objects.get(pk=id_user)
+                voters = group.voters.all()
+                userIsInTheGroup= user in voters
+
+                print(group.voters)
+                # Añadir usuario al grupo 
+                if group!=None and user!= None and not userIsInTheGroup: #Comprobar también que el usuario no está ya en el grupo....
+                    
+                    if group.isPublic:
+                        
+                        group.voters.add(user)
+                        
+                        return Response({})
+                #Grupo privado o en el que ya está el usuario
+                else:
+                    return Response({}, status=status.HTTP_401_UNAUTHORIZED)
+            except:
+                return Response({}, status=status.HTTP_401_UNAUTHORIZED)
+
+# TODO: check permissions and census
+class GroupsView(TemplateView):
+    template_name = 'groupList.html'
+    
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        groups = ParentGroup.objects.all()
+
+        diccionario= {}
+        for group in groups:
+            diccionario[group.pk]= {"name": group.name, "isPublic": group.isPublic }
+       
+        
+        context['groups_info'] = diccionario
+        context['KEYBITS'] = settings.KEYBITS
+
+        return context
+ 

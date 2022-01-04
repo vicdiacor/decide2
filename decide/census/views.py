@@ -284,13 +284,16 @@ def UserVotings(request):
     votCerradas = []
     votPendientes = []
     for i in cens:
-        votacion = Voting.objects.get(id=i)
-        if (votacion.start_date==None):
-            votPendientes.append(i)
-        elif(votacion.end_date==None):
-            votAbiertas.append(i)
-        else:
-            votCerradas.append(i)
+        try:
+            votacion = Voting.objects.get(id=i)
+            if (votacion.start_date==None):
+                votPendientes.append(i)
+            elif(votacion.end_date==None):
+                votAbiertas.append(i)
+            else:
+                votCerradas.append(i)
+        except Voting.DoesNotExist:
+            print("La votación con id ",i," no existe")
     context = {
         'voter': voter,
         'total':cens, 

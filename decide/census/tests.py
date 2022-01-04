@@ -723,3 +723,68 @@ class ImportAndExportGroupSeleniumTestCase(SeleniumBaseTestCase):
 
         # Eliminamos el fichero descargado
         os.remove(download_file_path) 
+
+class JoinPublicGroup(BaseTestCase):
+
+    def setUp(self):
+        super().setUp()
+
+        user1 = User(username='user1')
+        user1.set_password('user1')
+        user1.save()
+
+        user4 = User(username='user4')
+        user4.set_password('user4')
+        user4.save()
+
+        group1 = ParentGroup.objects.create(name='group1', isPublic=True, pk=100)
+        group1.voters.set([user1])
+
+        self.groups = [group1]
+        self.users = [user1, user4]
+        
+
+    def tearDown(self):
+        super().tearDown()
+
+    #Añade usuario 4 a grupo publico 1
+    def test_group_join(self):
+        user4 = User.objects.get(username='user4')
+        id4 = user4.id
+        data = {'group_to_join': '100', 'userId': id4}
+
+        self.login(user='user4', password='user4')
+        response = self.client.post('/census/joinGroup/', data, format='json')
+        self.assertEqual(response.status_code, 200) 
+
+    #Añade usuario 1 a grupo publico 1. Error, ya pertenece al grupo 1
+    def test_group_join_error(self):
+        user1 = User.objects.get(username='user1')
+        id1 = user1.id
+        data = {'group_to_join': '100', 'userId': id1}
+
+        self.login(user='user1', password='user1')
+        response = self.client.post('/census/joinGroup/', data, format='json')
+        self.assertEqual(response.status_code, 401)
+    
+    #Añade usuario '' a grupo publico 1. Error
+    def test_group_join_error_usuario(self):
+        user4 = User.objects.get(username='user4')
+        id4 = user4.id
+        data = {'group_to_join': '100', 'userId': int()}
+
+        self.login(user='user4', password='user4')
+        response = self.client.post('/census/joinGroup/', data, format='json')
+        self.assertEqual(response.status_code, 401)
+
+    #Añade usuario 4 a grupo publico ''. Error
+    def test_group_join_error_grupo(self):
+        user4 = User.objects.get(username='user4')
+        id4 = user4.id
+        data = {'group_to_join': int(), 'userId': id4}
+
+        self.login(user='user4', password='user4')
+        response = self.client.post('/census/joinGroup/', data, format='json')
+        self.assertEqual(response.status_code, 401)
+
+

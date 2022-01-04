@@ -106,3 +106,4 @@ loadtest/
 # Ficheros de importar/exportar grupos
 temp_export.xlsx
 temp_import.xlsx
+decide/.vscode/launch.json

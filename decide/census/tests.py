@@ -9,11 +9,8 @@ from .models import Census, ParentGroup, Request
 from base import mods
 from base.tests import BaseTestCase
 import logging as log
-from base.tests import SeleniumBaseTestCase
 import re
 from selenium.webdriver.support.ui import Select
-from mixnet.models import Auth
-
 
 from django.test import TestCase
 from rest_framework.test import APIClient
@@ -779,10 +776,7 @@ class ImportAndExportGroupSeleniumTestCase(SeleniumBaseTestCase):
         self.driver.get(f"{self.live_server_url}/census/groups/export/")
         self.assertFalse(re.fullmatch(f'{self.live_server_url}/census/groups/export/', self.driver.current_url))
 
-
-
-class PositiveRequestSeleniumTestCase(SeleniumBaseTestCase):    
-
+class PositiveRequestSeleniumTestCase(SeleniumBaseTestCase):
     def setUp(self):
 
         u1 = User(username='username1Grupo1', password='password')
@@ -843,8 +837,7 @@ class PositiveRequestSeleniumTestCase(SeleniumBaseTestCase):
         rows = self.driver.find_elements_by_xpath("//table/tbody/tr")
         self.assertEquals(len(rows), 1)
 
-
-class NegativeRequestSeleniumTestCase(SeleniumBaseTestCase):    
+class NegativeRequestSeleniumTestCase(SeleniumBaseTestCase):
 
     def setUp(self):
 

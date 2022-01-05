@@ -17,6 +17,7 @@ on:
         required: true
       HEROKU_API_KEY:
         required: true
+      
 
 jobs:
   build:
@@ -47,6 +48,18 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install codacy-coverage
+    - name: print secrets
+      run: |
+          echo $DEV_ENV_FILE >> .env
+          cat .env
+      shell: bash
+      env:
+        DEV_ENV_FILE : ${{secrets.ENV_SECRETS}}
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v2
+      with:
+       name: .env
+       path: /decide/decide
     - name: Run migrations
       run: cd decide;python manage.py migrate
     - name: Run tests     

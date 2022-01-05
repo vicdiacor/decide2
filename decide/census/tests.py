@@ -31,7 +31,6 @@ from census.import_and_export import *
 
 import re
 
-'''
 class CensusTestCase(BaseTestCase):
 
     def setUp(self):
@@ -839,7 +838,7 @@ class RequestCreationAutomated(BaseTestCase):
         response = self.client.post('/census/joinGroup/', data, format='json')
         self.assertEqual(response.status_code, 401)
 
-'''
+
 class JoinPrivateGroupSeleniumTestCase(SeleniumBaseTestCase):
 
 

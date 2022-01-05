@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'scheduler.apps.SchedulerConfig',
 
     'corsheaders',
     'django_filters',
@@ -71,7 +70,6 @@ MODULES = [
     'store',
     'visualizer',
     'voting',
-    'scheduler',
 ]
 
 BASEURL = 'http://localhost:8000'
@@ -144,9 +142,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/2.0/topics/i18n/
 
-LANGUAGE_CODE = 'es-ES'
+LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'Europe/Madrid'
+TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
@@ -160,12 +158,7 @@ TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static"),
-]
-
 STATIC_URL = '/static/'
-MEDIA_URL ='/media/'
 
 # number of bits for the key, all auths should use the same number of bits
 KEYBITS = 256
@@ -178,25 +171,25 @@ try:
     from local_settings import *
 except ImportError:
     APIS = {
-    'authentication': 'https://egc-part-chullo-decide.herokuapp.com/',
-    'base': 'https://egc-part-chullo-decide.herokuapp.com/',
-    'booth': 'https://egc-part-chullo-decide.herokuapp.com/',
-    'census': 'https://egc-part-chullo-decide.herokuapp.com/',
-    'mixnet': 'https://egc-part-chullo-decide.herokuapp.com/',
-    'postproc': 'https://egc-part-chullo-decide.herokuapp.com/',
-    'store': 'https://egc-part-chullo-decide.herokuapp.com/',
-    'visualizer': 'https://egc-part-chullo-decide.herokuapp.com/',
-    'voting': 'https://egc-part-chullo-decide.herokuapp.com/',
+    'authentication': 'https://egc-part-chullo-decide.herokuapp.com',
+    'base': 'https://egc-part-chullo-decide.herokuapp.com',
+    'booth': 'https://egc-part-chullo-decide.herokuapp.com',
+    'census': 'https://egc-part-chullo-decide.herokuapp.com',
+    'mixnet': 'https://egc-part-chullo-decide.herokuapp.com',
+    'postproc': 'https://egc-part-chullo-decide.herokuapp.com',
+    'store': 'https://egc-part-chullo-decide.herokuapp.com',
+    'visualizer': 'https://egc-part-chullo-decide.herokuapp.com',
+    'voting': 'https://egc-part-chullo-decide.herokuapp.com',
     }
 
-    BASEURL =  'https://egc-part-chullo-decide.herokuapp.com/'
+    BASEURL =  'https://egc-part-chullo-decide.herokuapp.com'
 
-    #DATABASES = dict()
+    DATABASES = dict()
     NOSE_ARGS = [
     '--with-xunit'
     ]
 
-    #DATABASES['default'] =  dj_database_url.config()
+    DATABASES['default'] =  dj_database_url.config()
     django_heroku.settings(locals(), test_runner=False)
     print("local_settings.py not found")
 
@@ -210,9 +203,3 @@ if os.path.exists("config.jsonnet"):
 
 
 INSTALLED_APPS = INSTALLED_APPS + MODULES
-
-EMAIL_USE_TLS = True  
-EMAIL_HOST = 'smtp.gmail.com'  
-EMAIL_HOST_USER = 'decidepartchullo@gmail.com'  
-EMAIL_HOST_PASSWORD = 'decide1234%'  
-EMAIL_PORT = 587  

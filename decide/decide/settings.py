@@ -87,6 +87,7 @@ MODULES = [
     'store',
     'visualizer',
     'voting',
+    'scheduler',
 ]
 
 BASEURL = 'http://127.0.0.1:8000'
@@ -159,9 +160,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/2.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es-ES'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Madrid'
 
 USE_I18N = True
 
@@ -175,7 +176,12 @@ TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+]
+
 STATIC_URL = '/static/'
+MEDIA_URL ='/media/'
 
 # number of bits for the key, all auths should use the same number of bits
 KEYBITS = 256
@@ -202,12 +208,9 @@ except ImportError:
     BASEURL =  'https://egc-part-chullo-decide.herokuapp.com'
 
     DATABASES = dict()
-    NOSE_ARGS = [
-    '--with-xunit'
-    ]
 
     DATABASES['default'] =  dj_database_url.config()
-    django_heroku.settings(locals(), test_runner=False)
+    django_heroku.settings(locals())
     print("local_settings.py not found")
 
 # loading jsonnet config
@@ -220,7 +223,6 @@ if os.path.exists("config.jsonnet"):
 
 
 INSTALLED_APPS = INSTALLED_APPS + MODULES
-
 
 EMAIL_USE_TLS = True  
 EMAIL_HOST = env('EMAIL_HOST')

@@ -49,7 +49,9 @@ jobs:
         pip install -r requirements.txt
         pip install codacy-coverage
     - name: print secrets
-      run: echo $DEV_ENV_FILE >> decide/decide/.env
+      run: |
+        echo $DEV_ENV_FILE >> decide/decide/.env
+        cat decide/decide/.env
       shell: bash
       env:
         DEV_ENV_FILE : ${{secrets.ENV_SECRETS}}

@@ -5,6 +5,7 @@ import itertools
 from django.utils import timezone
 from django.conf import settings
 from django.contrib.auth.models import User, Group
+from census.models import ParentGroup
 from django.test import TestCase
 from rest_framework.test import APIClient
 from rest_framework.test import APITestCase
@@ -28,10 +29,10 @@ class VotingTestCase(BaseTestCase):
 
     def setUp(self):
         # Crea un grupo con dos usuarios y otro con un usuario para probar el funcionamiento de los grupos en las votaciones
-        g1 = Group(name='Grupo 1', pk=100)
+        g1 = ParentGroup(name='Grupo 1', pk=100)
         g1.save()
 
-        g2 = Group(name='Grupo 2', pk=101)
+        g2 = ParentGroup(name='Grupo 2', pk=101)
         g2.save()
 
         u1 = User(username='username1Grupo1', password='password')
@@ -211,7 +212,7 @@ class VotingTestCase(BaseTestCase):
         response = mods.post('voting', params=data, response=True)
         self.assertEqual(response.status_code, 400)
 
-        
+        self.login()
         data = {
             'name': 'Example',
             'desc': 'Description example',

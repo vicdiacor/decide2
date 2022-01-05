@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.response import Response
 from django.contrib.auth.models import User, Group
+from census.models import ParentGroup
 from rest_framework.status import (
         HTTP_409_CONFLICT as ST_409
 )
@@ -54,9 +55,14 @@ class VotingView(generics.ListCreateAPIView):
             ids = list(groups.split(","))
             for id in ids:
                 try:
-                    Group.objects.get(pk=int(id))
+                    ParentGroup.objects.get(pk=int(id))
                 except:
                     return Response({}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            try:
+                groups = ParentGroup.objects.get(name='Users with no group' + str(request.data.get('pk')))
+            except:
+                return Response({}, status=status.HTTP_400_BAD_REQUEST)
 
         #Creación de la pregunta
         question_type= request.data.get('question_type')

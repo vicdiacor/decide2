@@ -281,25 +281,31 @@ def UserVotings(request):
     voter = request.user.username
     cens = Census.objects.filter(voter_id=voterId).values_list('voting_id',flat=True)
     votAbiertas = []
-    votCerradas = []
+    votParadas = []
     votPendientes = []
+    votTally = []
     for i in cens:
         try:
             votacion = Voting.objects.get(id=i)
+            
             if (votacion.start_date==None):
                 votPendientes.append(i)
             elif(votacion.end_date==None):
                 votAbiertas.append(i)
             else:
-                votCerradas.append(i)
+                if(not votacion.tally==None):
+                    votTally.append(i)
+                else:
+                    votParadas.append(i)                  
         except Voting.DoesNotExist:
             print("La votación con id ",i," no existe")
     context = {
         'voter': voter,
         'total':cens, 
         'abiertas':votAbiertas, 
-        'cerradas':votCerradas,
+        'cerradas':votTally,
         'pendientes':votPendientes,
+        'paradas':votParadas,
         'STATIC_URL':settings.STATIC_URL
         }        
     return render(request,'view_voting.html',context)

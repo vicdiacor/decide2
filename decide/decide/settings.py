@@ -206,21 +206,10 @@ except ImportError:
 
     BASEURL =  'https://egc-part-chullo-decide.herokuapp.com'
 
-    # try:
-    #     DATABASES = dict()
+    
+    #DATABASES = dict()
 
-    #     DATABASES['default'] =  dj_database_url.config()
-    # except:
-    #     DATABASES = {
-    #         'default': {
-    #             'ENGINE': 'django.db.backends.postgresql',
-    #             'NAME': 'decide',
-    #             'USER': 'decide',
-    #             'PASSWORD': 'decide',
-    #             'HOST': 'localhost',
-    #             'PORT': '5432',
-    #         }   
-    #     }
+    #DATABASES['default'] =  dj_database_url.config()
     django_heroku.settings(locals())
     print("local_settings.py not found")
 

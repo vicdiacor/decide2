@@ -52,8 +52,16 @@ jobs:
       run: |
         echo $DEV_ENV_FILE >> decide/decide/.env
       env:
-        DEV_ENV_FILE : ${{secrets.ENV_SECRETS}}
+        DEV_ENV_FILE: ${{secrets.ENV_SECRETS}}
     - name: Run migrations
+      env:
+        EMAIL_HOST_USER: ${{secrets.EMAIL_HOST_USER}}
+        EMAIL_HOST_PASSWORD: ${{secrets.EMAIL_HOST_PASSWORD}}
+        EMAIL_HOST: ${{secrets.EMAIL_HOST}}
+        client_id_discord: ${{secrets.CLIENT_ID_DISCORD}}
+        secret_key_discord: ${{secrets.SECRET_KEY_DISCORD}}
+        client_id_github: ${{secrets.CLIENT_ID_GITHUB}}
+        secret_key_github: ${{secrets.SECRET_KEY_GITHUB}}
       run: cd decide;python manage.py migrate
     - name: Run tests     
       run: cd decide;coverage run --branch --source=. ./manage.py test census --keepdb; coverage xml;

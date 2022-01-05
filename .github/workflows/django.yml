@@ -5,7 +5,6 @@ on:
     branches:
       - master
       - develop
-      - practica/79-actions
   pull_request:
     branches:
       - master
@@ -50,10 +49,7 @@ jobs:
         pip install -r requirements.txt
         pip install codacy-coverage
     - name: print secrets
-      run: |
-          ls
-          echo $DEV_ENV_FILE >> decide/decide/.env
-          cat decide/decide/.env
+      run: echo $DEV_ENV_FILE >> decide/decide/.env
       shell: bash
       env:
         DEV_ENV_FILE : ${{secrets.ENV_SECRETS}}
@@ -72,6 +68,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
+    - name: print secrets
+      run: echo $DEV_ENV_FILE >> decide/decide/.env
     - uses: akhileshns/heroku-deploy@v3.12.12 # This is the action
       with:
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}

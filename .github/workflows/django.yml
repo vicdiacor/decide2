@@ -51,8 +51,6 @@ jobs:
     - name: print secrets
       run: |
         echo $DEV_ENV_FILE >> decide/decide/.env
-        echo ::set-output name=env_file::$(cat decide/decide/.env)
-      shell: bash
       env:
         DEV_ENV_FILE : ${{secrets.ENV_SECRETS}}
     - name: Run migrations

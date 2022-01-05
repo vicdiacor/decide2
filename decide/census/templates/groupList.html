@@ -181,7 +181,7 @@
                     }
                     this.postData("{% url "gateway" "census"  "/joinGroup/" %}", data)
                         .then(data => {
-                            this.showAlert("success", '{% trans "Congratulations. Now you are in the group!" %}');
+                            this.showAlert("success", '{% trans "Congratulations!" %}');
                         })
                         .catch(error => {
                             this.showAlert("danger", '{% trans "No puedes unirte a un grupo al que ya perteneces o a un grupo privado || Error:" %}' + error);

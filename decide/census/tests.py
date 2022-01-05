@@ -20,12 +20,15 @@ from base import mods
 from base.tests import BaseTestCase, SeleniumBaseTestCase
 
 from django.contrib.auth.models import User, Group
-from selenium.webdriver.support.ui import Select
+from selenium.webdriver.support.ui import Select, WebDriverWait
+from selenium.webdriver.common.keys import Keys
 import os
 import time
 import openpyxl
 
 from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
 
 from census.import_and_export import * 
 
@@ -837,3 +840,85 @@ class JoinPublicGroup(BaseTestCase):
         self.login(user='user4', password='user4')
         response = self.client.post('/census/joinGroup/', data, format='json')
         self.assertEqual(response.status_code, 401)
+
+class JoinPublicGroupSeleniumTestCase(SeleniumBaseTestCase):
+
+
+    def setUp(self):
+
+        user1 = User(username='user1')
+        user1.set_password('user1')
+        user1.save()
+
+        user4 = User(username='user4')
+        user4.set_password('user4')
+        user4.save()
+
+        group1 = ParentGroup.objects.create(name='group1', isPublic=True, pk=100)
+        group1.voters.set([user1])
+
+        self.groups = [group1]
+        self.users = [user1, user4]
+        
+        return super().setUp()    
+
+    def tearDown(self):
+        super().tearDown()
+    
+    
+    def test_add_group_public_exito(self):
+
+
+        # Intentamos acceder a la vista para seleccionar grupo
+        self.driver.get(f'{self.live_server_url}/census/groupList')
+
+
+        # El usuario se logea
+        self.driver.find_element_by_id('username').send_keys('user4')
+        self.driver.find_element_by_id('password').send_keys('user4',Keys.ENTER)
+        
+        # El usuario se encuentra con un formulario de tipo RADIO
+
+        wait = WebDriverWait(self.driver, 10)
+        botonRadio= wait.until(EC.element_to_be_clickable((By.XPATH,"//input[@id='100']")))
+        
+        self.assertEquals(botonRadio.get_attribute("type"),"radio")
+
+        # El usuario selecciona el grupo al que desea unirse
+
+        botonRadio.click()
+        self.driver.find_element_by_class_name('btn-primary').click()
+        mensaje_exito= str(wait.until(EC.presence_of_element_located((By.XPATH,"//div[@role='alert']"))).text).strip()
+        self.assertEquals(mensaje_exito,'× Congratulations!')
+        self.driver.find_element_by_xpath("//button[@class='close']").click()
+
+
+    def test_add_group_public_error(self):
+
+
+        # Intentamos acceder a la vista para seleccionar grupo
+        self.driver.get(f'{self.live_server_url}/census/groupList')
+
+
+        # El usuario se logea
+        self.driver.find_element_by_id('username').send_keys('user1')
+        self.driver.find_element_by_id('password').send_keys('user1',Keys.ENTER)
+        
+        # El usuario se encuentra con un formulario de tipo RADIO
+
+        wait = WebDriverWait(self.driver, 10)
+        botonRadio= wait.until(EC.element_to_be_clickable((By.XPATH,"//input[@id='100']")))
+        
+        self.assertEquals(botonRadio.get_attribute("type"),"radio")
+
+        # El usuario selecciona el grupo al que desea unirse
+
+        botonRadio.click()
+        self.driver.find_element_by_class_name('btn-primary').click()
+        mensaje_exito= str(wait.until(EC.presence_of_element_located((By.XPATH,"//div[@role='alert']"))).text).strip()
+        self.assertEquals(mensaje_exito,'× No puedes unirte a un grupo al que ya perteneces o a un grupo privado || Error:Unauthorized')
+        self.driver.find_element_by_xpath("//button[@class='close']").click()
+
+        
+    
+    

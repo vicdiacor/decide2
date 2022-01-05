@@ -52,7 +52,7 @@ jobs:
     - name: print secrets
       run: |
           ls
-          echo $DEV_ENV_FILE >> /decide/decide/.env
+          echo $DEV_ENV_FILE >> decide/decide/.env
           cat .env
       shell: bash
       env:

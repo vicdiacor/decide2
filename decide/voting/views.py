@@ -1,3 +1,4 @@
+from django import template
 import django_filters.rest_framework
 from django.conf import settings
 from django.utils import timezone
@@ -10,7 +11,6 @@ from rest_framework.status import (
 )
 from django.db.utils import IntegrityError
 
-
 from .models import Question, QuestionOption, Voting
 from .serializers import SimpleVotingSerializer, VotingSerializer
 from base.perms import UserIsStaff
@@ -18,12 +18,14 @@ from base.models import Auth
 from census.models import Census
 import re
 
+from django.shortcuts import render
+
 
 class VotingView(generics.ListCreateAPIView):
     queryset = Voting.objects.all()
     serializer_class = VotingSerializer
     filter_backends = (django_filters.rest_framework.DjangoFilterBackend,)
-    filter_fields = ('id', )
+    filter_fields = ('id',  )
 
     def get(self, request, *args, **kwargs):
         version = request.version
@@ -102,7 +104,6 @@ class VotingView(generics.ListCreateAPIView):
                 
             ###############
 
-
         return Response(data={'id': voting_id}, status=status.HTTP_201_CREATED)
 
 
@@ -121,12 +122,14 @@ class VotingUpdate(generics.RetrieveUpdateDestroyAPIView):
         msg = ''
         st = status.HTTP_200_OK
         if action == 'start':
+
             if voting.start_date:
                 msg = 'Voting already started'
                 st = status.HTTP_400_BAD_REQUEST
             else:
                 voting.start_date = timezone.now()
-                # voting.create_pubkey()
+                
+                voting.create_pubkey()
                 voting.save()
                 msg = 'Voting started'
         elif action == 'stop':
@@ -157,3 +160,42 @@ class VotingUpdate(generics.RetrieveUpdateDestroyAPIView):
             msg = 'Action not found, try with start, stop or tally'
             st = status.HTTP_400_BAD_REQUEST
         return Response(msg, status=st)
+
+def voting_admin_notification(request):
+
+    votings= Voting.objects.all()
+
+    data = {
+        'votings': votings
+    }
+
+    return render(request, 'list_admin_notifications.html', data)
+
+def voting_user_notification(request):
+    census = Census.objects.all()
+    votings= Voting.objects.all()
+    user_id = request.user.id
+    census_voting_id = list(census.values_list('voting_id',flat = True))
+    census_voter_id = list(census.values_list('voter_id',flat = True))
+    id_list = dict_census(census_voting_id, census_voter_id, user_id)
+
+    data = {
+        'votings': get_votings_by_id(id_list, votings),
+    }
+
+    return render(request, 'list_user_notifications.html', data)
+
+def dict_census(census_voting_id, census_voter_id, user_id):
+    census_zip = list(zip(census_voting_id, census_voter_id))
+    votings_id_list = []
+    for i in range(len(census_zip)):
+        if census_zip[i][1] == user_id:
+            votings_id_list.append(census_zip[i][0])
+    return votings_id_list
+
+def get_votings_by_id(id_list, votings):
+    votings_list=[]
+    for v in votings:
+        if v.id in id_list:
+            votings_list.append(v)
+    return votings_list

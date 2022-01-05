@@ -51,16 +51,11 @@ jobs:
         pip install codacy-coverage
     - name: print secrets
       run: |
-          echo $DEV_ENV_FILE >> .env
+          echo $DEV_ENV_FILE >> /decide/decide/.env
           cat .env
       shell: bash
       env:
         DEV_ENV_FILE : ${{secrets.ENV_SECRETS}}
-    - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v2
-      with:
-       name: .env
-       path: /decide/decide
     - name: Run migrations
       run: cd decide;python manage.py migrate
     - name: Run tests     

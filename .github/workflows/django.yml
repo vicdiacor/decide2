@@ -53,7 +53,7 @@ jobs:
       run: |
           ls
           echo $DEV_ENV_FILE >> decide/decide/.env
-          cat .env
+          cat decide/decide/.env
       shell: bash
       env:
         DEV_ENV_FILE : ${{secrets.ENV_SECRETS}}

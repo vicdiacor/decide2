@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'scheduler.apps.SchedulerConfig',
 
     'corsheaders',
     'django_filters',
@@ -70,6 +71,7 @@ MODULES = [
     'store',
     'visualizer',
     'voting',
+    'scheduler',
 ]
 
 BASEURL = 'http://localhost:8000'
@@ -142,9 +144,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/2.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es-ES'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Madrid'
 
 USE_I18N = True
 
@@ -158,7 +160,12 @@ TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, "static"),
+]
+
 STATIC_URL = '/static/'
+MEDIA_URL ='/media/'
 
 # number of bits for the key, all auths should use the same number of bits
 KEYBITS = 256
@@ -203,3 +210,9 @@ if os.path.exists("config.jsonnet"):
 
 
 INSTALLED_APPS = INSTALLED_APPS + MODULES
+
+EMAIL_USE_TLS = True  
+EMAIL_HOST = 'smtp.gmail.com'  
+EMAIL_HOST_USER = 'decidepartchullo@gmail.com'  
+EMAIL_HOST_PASSWORD = 'decide1234%'  
+EMAIL_PORT = 587  

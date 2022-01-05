@@ -8,7 +8,7 @@ from rest_framework.authtoken.models import Token
 from selenium import webdriver
 
 from base import mods
-from base.tests import BaseTestCase, SeleniumBaseTestCase
+from base.tests import SeleniumBaseTestCase
 from selenium.webdriver.common.by import By
 
 from django.contrib import auth
@@ -136,6 +136,7 @@ class AuthTestCase(APITestCase):
             sorted(list(response.json().keys())),
             ['token', 'user_pk']
         )
+
 
 class SeleniumTestCase(SeleniumBaseTestCase):
 
@@ -448,3 +449,22 @@ class RegistrarUsuarioTestCase(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertContains(response, "<h2>Formulario de registro en DECIDE</h2>", html=True)
 
+
+class RedesSocialesSeleniumTestCase(SeleniumBaseTestCase): #Imposible testear el correcto funcionamiento de la autenticación por redes sociales debido a diversos motivos más abajo explicados
+                                                            #Es lógico estar en esta situación puesto que es software de terceros y tienen sus propias políticas.
+                                                            #Se debe testear a mano.
+                                                            
+    #No se puede testear la autenticación con Discord porque no puedo crear un perfil de prueba en dicha apliación, ya que necesito un número de teléfono para verificar, y con mi móvil
+    #ya tengo mi cuenta personal que no pondría aquí por seguridad al dejar en bruto la contraseña. Testearé que la página donde introducir las credenciales se abre correctamente.
+    
+    def test_get_user_form_discord(self):
+        self.driver.get(f"{self.live_server_url}/accounts/discord/login/")
+        time.sleep(5)
+
+
+    #No se puede testear la autenticación con GitHub porque la página de inicio de sesión en esta plataforma bloquea la confirmación si se ejecuta bajo Selenium. 
+    #Testearé que la página donde introducir las credenciales se abre correctamente.
+    
+    def test_get_user_form_github(self):
+        self.driver.get(f"{self.live_server_url}/accounts/github/login/")
+        time.sleep(5)

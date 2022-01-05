@@ -14,6 +14,11 @@ import os
 import django_heroku
 import dj_database_url
 
+import environ
+
+env = environ.Env()
+environ.Env.read_env()
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -40,7 +45,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'scheduler.apps.SchedulerConfig',
-
+    'django.contrib.sites',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.discord',
+    'allauth.socialaccount.providers.github',
     'corsheaders',
     'django_filters',
     'rest_framework',
@@ -48,6 +58,11 @@ INSTALLED_APPS = [
     'rest_framework_swagger',
     'gateway',
 ]
+
+SITE_ID = 1
+ACCOUNT_EMAIL_VERIFICATION = "none"
+LOGIN_REDIRECT_URL = "home"
+ACCOUNT_LOGOUT_ON_GET = True
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -59,6 +74,7 @@ REST_FRAMEWORK = {
 
 AUTHENTICATION_BACKENDS = [
     'base.backends.AuthBackend',
+    "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
 MODULES = [
@@ -74,7 +90,7 @@ MODULES = [
     'scheduler',
 ]
 
-BASEURL = 'http://localhost:8000'
+BASEURL = 'http://127.0.0.1:8000'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -209,7 +225,27 @@ if os.path.exists("config.jsonnet"):
 INSTALLED_APPS = INSTALLED_APPS + MODULES
 
 EMAIL_USE_TLS = True  
-EMAIL_HOST = 'smtp.gmail.com'  
-EMAIL_HOST_USER = 'decidepartchullo@gmail.com'  
-EMAIL_HOST_PASSWORD = 'decide1234%'  
-EMAIL_PORT = 587  
+EMAIL_HOST = env('EMAIL_HOST')
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+EMAIL_PORT = 587
+
+
+
+SOCIALACCOUNT_PROVIDERS = {
+    'discord': {
+        'APP': {
+            'client_id': env('client_id_discord'),
+            'secret': env('secret_key_discord'),
+            'key': ''
+        }
+    },
+    
+    'github': {
+        'APP': {
+            'client_id': env('client_id_github'),
+            'secret': env('secret_key_github'),
+            'key': ''
+        }
+    }
+}

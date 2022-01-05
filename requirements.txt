@@ -13,3 +13,5 @@ APScheduler==3.5.3
 openpyxl==3.0.9
 gunicorn
 django-heroku
+django-allauth==0.44.0
+django-environ

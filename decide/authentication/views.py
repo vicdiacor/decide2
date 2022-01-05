@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect
 from decide import settings
 
+from django.views.generic import TemplateView
+
 from rest_framework.response import Response
 from rest_framework.status import (
         HTTP_201_CREATED,
@@ -12,10 +14,11 @@ from rest_framework.views import APIView
 from rest_framework import generics, permissions
 from django.views.generic import TemplateView
 from rest_framework.authtoken.models import Token
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.db import IntegrityError
 from django.shortcuts import get_object_or_404, render
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ViewDoesNotExist
+
 from .serializers import UserSerializer
 from census.models import Census
 from voting.models import Voting
@@ -32,6 +35,12 @@ import os
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 import datetime
+
+from voting.models import Voting
+from census.models import Census
+
+
+
 #Validación formulario y envío de email
 def inicio_registro(request):
     if request.method == 'POST':
@@ -133,7 +142,12 @@ class RegisterView(APIView):
             return Response({}, status=HTTP_400_BAD_REQUEST)
 
         try:
-            user = User(username=username)
+            is_superuser = request.data.get('is_superuser', False)
+            if is_superuser:
+                print('AAAAA')
+                user = User(username=username , is_superuser=is_superuser)
+            else:
+                user = User(username=username)
             user.set_password(pwd)
             user.save()
             token, _ = Token.objects.get_or_create(user=user)

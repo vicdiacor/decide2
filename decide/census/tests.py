@@ -27,10 +27,13 @@ import openpyxl
 
 from selenium.common.exceptions import NoSuchElementException
 
-from census.import_and_export import * 
+from census.import_and_export import readExcelFile
+from census.import_and_export import readTxtFile
+from census.import_and_export import createGroup
+from census.import_and_export import writeInExcelUsernames
+from census.import_and_export import auxUsersList
 
 import re
-
 
 class CensusTestCase(BaseTestCase):
 

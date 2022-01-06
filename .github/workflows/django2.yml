@@ -105,5 +105,4 @@ jobs:
           heroku_api_key: ${{secrets.HEROKU_API_KEY_2}}
           heroku_app_name: "decide-part-chullo-2"
           heroku_email: "vicdiacor@alum.us.es"
-          branch: "master"
     - run: heroku run -a "decide-part-chullo-2" sh -c "python decide/manage.py shell -c \"from django.contrib.auth.models import User; User.objects.filter(username='admin') or User.objects.create_superuser('admin', 'admin@example.com', 'admin')\""

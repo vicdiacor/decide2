@@ -193,25 +193,44 @@ DEFAULT_VERSION = 'v1'
 try:
     from local_settings import *
 except ImportError:
-    APIS = {
-    'authentication': 'https://decide-part-chullo-2.herokuapp.com',
-    'base': 'https://decide-part-chullo-2.herokuapp.com',
-    'booth': 'https://decide-part-chullo-2.herokuapp.com',
-    'census': 'https://decide-part-chullo-2.herokuapp.com',
-    'mixnet': 'https://decide-part-chullo-2.herokuapp.com',
-    'postproc': 'https://decide-part-chullo-2.herokuapp.com',
-    'store': 'https://decide-part-chullo-2.herokuapp.com',
-    'visualizer': 'https://decide-part-chullo-2.herokuapp.com',
-    'voting': 'https://decide-part-chullo-2.herokuapp.com',
-    }
+    deploy_type= env("DEPLOY_TYPE")
+    if deploy_type=='heroku':
 
-    BASEURL =  'https://decide-part-chullo-2.herokuapp.com'
+        APIS = {
+        'authentication': 'https://decide-part-chullo-2.herokuapp.com',
+        'base': 'https://decide-part-chullo-2.herokuapp.com',
+        'booth': 'https://decide-part-chullo-2.herokuapp.com',
+        'census': 'https://decide-part-chullo-2.herokuapp.com',
+        'mixnet': 'https://decide-part-chullo-2.herokuapp.com',
+        'postproc': 'https://decide-part-chullo-2.herokuapp.com',
+        'store': 'https://decide-part-chullo-2.herokuapp.com',
+        'visualizer': 'https://decide-part-chullo-2.herokuapp.com',
+        'voting': 'https://decide-part-chullo-2.herokuapp.com',
+        }
 
-    DATABASES = dict()
+        BASEURL =  'https://decide-part-chullo-2.herokuapp.com'
 
-    DATABASES['default'] =  dj_database_url.config()
-    django_heroku.settings(locals())
-    print("local_settings.py not found")
+        DATABASES = dict()
+
+        DATABASES['default'] =  dj_database_url.config()
+        django_heroku.settings(locals())
+        print("settings.py configured for heroku")
+    elif deploy_type=='github':
+        
+        BASEURL = 'http://localhost:8000'
+
+        APIS = {
+            'authentication': BASEURL,
+            'base': BASEURL,
+            'booth': BASEURL,
+            'census': BASEURL,
+            'mixnet': BASEURL,
+            'postproc': BASEURL,
+            'store': BASEURL,
+            'visualizer': BASEURL,
+            'voting': BASEURL,
+        }
+        print("settings.py configured for the GitHub virtual machine ")
 
 # loading jsonnet config
 if os.path.exists("config.jsonnet"):

@@ -42,6 +42,7 @@ jobs:
           POSTGRES_USER: decide
           POSTGRES_PASSWORD: decide
           POSTGRES_DB: decide
+          DEPLOY_TYPE: github
         ports:
           - 5432:5432
         # needed because the postgres container does not provide a healthcheck
@@ -79,7 +80,9 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: print secrets
-      run: echo $DEV_ENV_FILE >> decide/decide/.env
+      run: |
+        echo $DEV_ENV_FILE >> decide/decide/.env 
+        echo 'DEPLOY_TYPE=heroku' >> decide/decide/.env
     - uses: akhileshns/heroku-deploy@v3.12.12 # This is the action
       with:
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}
@@ -93,7 +96,9 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: print secrets
-      run: echo $DEV_ENV_FILE >> decide/decide/.env
+      run: |
+        echo $DEV_ENV_FILE >> decide/decide/.env 
+        echo 'DEPLOY_TYPE=heroku' >> decide/decide/.env
     - uses: akhileshns/heroku-deploy@v3.12.12 # This is the action
       with:
           heroku_api_key: ${{secrets.HEROKU_API_KEY_2}}

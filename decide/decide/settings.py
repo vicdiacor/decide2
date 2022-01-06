@@ -193,9 +193,11 @@ DEFAULT_VERSION = 'v1'
 try:
     from local_settings import *
 except ImportError:
+    
     deploy_type= env("DEPLOY_TYPE")
+    print("Tipo de despliegue: ", deploy_type)
     if deploy_type=='heroku':
-
+        print("Configurando settings.py para heroku")
         APIS = {
         'authentication': 'https://decide-part-chullo-2.herokuapp.com',
         'base': 'https://decide-part-chullo-2.herokuapp.com',
@@ -216,7 +218,8 @@ except ImportError:
         django_heroku.settings(locals())
         print("settings.py configured for heroku")
     elif deploy_type=='github':
-        
+        print("Configurando settings.py para github")
+
         BASEURL = 'http://localhost:8000'
 
         APIS = {

@@ -37,7 +37,6 @@ from django.views.generic.base import View
 from census.import_and_export import readExcelFile
 from census.import_and_export import readTxtFile
 from census.import_and_export import createGroup
-from census.import_and_export import readExcelFile
 from census.import_and_export import writeInExcelUsernames
 
 from census.forms import *

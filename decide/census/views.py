@@ -25,8 +25,8 @@ from rest_framework.status import (
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from base.perms import UserIsStaff
+from .models import Census, ParentGroup, Request
 from decide import settings
-from .models import Census, ParentGroup
 from .forms import GroupOperationsForm
 
 group_successfully_created = "Grupo creado con éxito"
@@ -311,7 +311,13 @@ class joinGroup(APIView):
                         group.voters.add(user)
                         
                         return Response({})
-                #Grupo privado o en el que ya está el usuario
+
+                    elif group.isPublic == False:
+                        request = Request(voter_id=id_user, group_id=id_group)
+                        request.save()
+                        return Response({})
+
+                #Grupo en el que ya está el usuario
                 else:
                     return Response({}, status=status.HTTP_401_UNAUTHORIZED)
             except:

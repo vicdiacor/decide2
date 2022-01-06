@@ -2,7 +2,6 @@ import time
 import random
 from django.contrib.auth.models import User, UserManager, Group
 from django.test import TestCase, Client
-from base.tests import SeleniumBaseTestCase
 from rest_framework.test import APIClient
 
 from .models import Census, ParentGroup
@@ -14,23 +13,23 @@ import logging as log
 from django.test import TestCase
 from rest_framework.test import APIClient
 
-from django.contrib.auth.models import User
 
 from base import mods
 from base.tests import BaseTestCase, SeleniumBaseTestCase
 
-from django.contrib.auth.models import User, Group
-from selenium.webdriver.support.ui import Select
+from selenium.webdriver.support.ui import Select, WebDriverWait
+from selenium.webdriver.common.keys import Keys
 import os
 import time
 import openpyxl
 
 from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
 
 from census.import_and_export import * 
 
 import re
-
 
 class CensusTestCase(BaseTestCase):
 
@@ -774,3 +773,148 @@ class ImportAndExportGroupSeleniumTestCase(SeleniumBaseTestCase):
         self.login(username='username1', password='password')
         self.driver.get(f"{self.live_server_url}/census/groups/export/")
         self.assertFalse(re.fullmatch(f'{self.live_server_url}/census/groups/export/', self.driver.current_url))
+
+
+class RequestCreationAutomated(BaseTestCase):
+
+    def setUp(self):
+        super().setUp()
+
+        user1 = User(username='user1')
+        user1.set_password('user1')
+        user1.save()
+
+        user4 = User(username='user4')
+        user4.set_password('user4')
+        user4.save()
+
+        group1 = ParentGroup.objects.create(name='group1', isPublic=False, pk=100)
+        group1.voters.set([user1])
+
+        self.groups = [group1]
+        self.users = [user1, user4]
+        
+
+    def tearDown(self):
+        super().tearDown()
+
+    #Añade usuario 4 a grupo publico 1
+    def test_group_join(self):
+        user4 = User.objects.get(username='user4')
+        id4 = user4.id
+        data = {'group_to_join': '100', 'userId': id4}
+
+        self.login(user='user4', password='user4')
+        response = self.client.post('/census/joinGroup/', data, format='json')
+        self.assertEqual(response.status_code, 200) 
+
+    #Añade usuario 1 a grupo publico 1. Error, ya pertenece al grupo 1
+    def test_group_join_error(self):
+        user1 = User.objects.get(username='user1')
+        id1 = user1.id
+        data = {'group_to_join': '100', 'userId': id1}
+
+        self.login(user='user1', password='user1')
+        response = self.client.post('/census/joinGroup/', data, format='json')
+        self.assertEqual(response.status_code, 401)
+    
+    #Añade usuario '' a grupo publico 1. Error
+    def test_group_join_error_usuario(self):
+        user4 = User.objects.get(username='user4')
+        id4 = user4.id
+        data = {'group_to_join': '100', 'userId': int()}
+
+        self.login(user='user4', password='user4')
+        response = self.client.post('/census/joinGroup/', data, format='json')
+        self.assertEqual(response.status_code, 401)
+
+    #Añade usuario 4 a grupo publico ''. Error
+    def test_group_join_error_grupo(self):
+        user4 = User.objects.get(username='user4')
+        id4 = user4.id
+        data = {'group_to_join': int(), 'userId': id4}
+
+        self.login(user='user4', password='user4')
+        response = self.client.post('/census/joinGroup/', data, format='json')
+        self.assertEqual(response.status_code, 401)
+
+
+class JoinPrivateGroupSeleniumTestCase(SeleniumBaseTestCase):
+
+
+    def setUp(self):
+
+        user1 = User(username='user1')
+        user1.set_password('user1')
+        user1.save()
+
+        user4 = User(username='user4')
+        user4.set_password('user4')
+        user4.save()
+
+        group1 = ParentGroup.objects.create(name='group1', isPublic=False, pk=100)
+        group1.voters.set([user1])
+
+        self.groups = [group1]
+        self.users = [user1, user4]
+
+        return super().setUp()    
+
+    def tearDown(self):
+        super().tearDown()
+
+
+    def test_add_group_private_exito(self):
+
+
+        # Intentamos acceder a la vista para seleccionar grupo
+        self.driver.get(f'{self.live_server_url}/census/groupList')
+
+
+        # El usuario se logea
+        self.driver.find_element_by_id('username').send_keys('user4')
+        self.driver.find_element_by_id('password').send_keys('user4',Keys.ENTER)
+
+        # El usuario se encuentra con un formulario de tipo RADIO
+
+        wait = WebDriverWait(self.driver, 10)
+        botonRadio= wait.until(EC.element_to_be_clickable((By.XPATH,"//input[@id='100']")))
+
+        self.assertEquals(botonRadio.get_attribute("type"),"radio")
+
+        # El usuario selecciona el grupo al que desea unirse
+
+        botonRadio.click()
+        self.driver.find_element_by_class_name('btn-primary').click()
+        mensaje_exito= str(wait.until(EC.presence_of_element_located((By.XPATH,"//div[@role='alert']"))).text).strip()
+        self.assertEquals(mensaje_exito,'× Congratulations!')
+        self.driver.find_element_by_xpath("//button[@class='close']").click()
+
+
+    def test_add_group_private_error(self):
+
+
+        # Intentamos acceder a la vista para seleccionar grupo
+        self.driver.get(f'{self.live_server_url}/census/groupList')
+
+
+        # El usuario se logea
+        self.driver.find_element_by_id('username').send_keys('user1')
+        self.driver.find_element_by_id('password').send_keys('user1',Keys.ENTER)
+
+        # El usuario se encuentra con un formulario de tipo RADIO
+
+        wait = WebDriverWait(self.driver, 10)
+        botonRadio= wait.until(EC.element_to_be_clickable((By.XPATH,"//input[@id='100']")))
+
+        self.assertEquals(botonRadio.get_attribute("type"),"radio")
+
+        # El usuario selecciona el grupo al que desea unirse
+
+        botonRadio.click()
+        self.driver.find_element_by_class_name('btn-primary').click()
+        mensaje_exito= str(wait.until(EC.presence_of_element_located((By.XPATH,"//div[@role='alert']"))).text).strip()
+        self.assertEquals(mensaje_exito,'× No puedes unirte a un grupo al que ya perteneces o a un grupo privado || Error:Unauthorized')
+        self.driver.find_element_by_xpath("//button[@class='close']").click()
+
+

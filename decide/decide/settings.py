@@ -207,9 +207,9 @@ except ImportError:
     BASEURL =  'https://egc-part-chullo-decide.herokuapp.com'
 
     
-    #DATABASES = dict()
+    # DATABASES = dict()
 
-    #DATABASES['default'] =  dj_database_url.config()
+    # DATABASES['default'] =  dj_database_url.config()
     django_heroku.settings(locals())
     print("local_settings.py not found")
 

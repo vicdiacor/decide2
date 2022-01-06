@@ -194,18 +194,18 @@ try:
     from local_settings import *
 except ImportError:
     APIS = {
-    'authentication': 'https://egc-part-chullo-decide.herokuapp.com/',
-    'base': 'https://egc-part-chullo-decide.herokuapp.com/',
-    'booth': 'https://egc-part-chullo-decide.herokuapp.com/',
-    'census': 'https://egc-part-chullo-decide.herokuapp.com/',
-    'mixnet': 'https://egc-part-chullo-decide.herokuapp.com/',
-    'postproc': 'https://egc-part-chullo-decide.herokuapp.com/',
-    'store': 'https://egc-part-chullo-decide.herokuapp.com/',
-    'visualizer': 'https://egc-part-chullo-decide.herokuapp.com/',
-    'voting': 'https://egc-part-chullo-decide.herokuapp.com/',
+    'authentication': 'https://decide-part-chullo-2.herokuapp.com',
+    'base': 'https://decide-part-chullo-2.herokuapp.com',
+    'booth': 'https://decide-part-chullo-2.herokuapp.com',
+    'census': 'https://decide-part-chullo-2.herokuapp.com',
+    'mixnet': 'https://decide-part-chullo-2.herokuapp.com',
+    'postproc': 'https://decide-part-chullo-2.herokuapp.com',
+    'store': 'https://decide-part-chullo-2.herokuapp.com',
+    'visualizer': 'https://decide-part-chullo-2.herokuapp.com',
+    'voting': 'https://decide-part-chullo-2.herokuapp.com',
     }
 
-    BASEURL =  'https://egc-part-chullo-decide.herokuapp.com/'
+    BASEURL =  'https://decide-part-chullo-2.herokuapp.com/'
 
     DATABASES = dict()
 

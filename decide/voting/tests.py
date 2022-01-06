@@ -825,7 +825,7 @@ class SeleniumNotificationTestCase(SeleniumBaseTestCase):
         self.assertEqual(mail.outbox[0].to, ['testuser@gmail.com'])                 #Se envía el correo al usuario que puede participar
 
 
-# Prueba el envío de correo electrónico a los usuarios que pueden participar en la votación
+# Prueba que no se envía el correo electrónico a los usuarios que no pueden participar en la votación
     def test_not_send_email_voting_start(self):
         self.login()
 
@@ -875,5 +875,58 @@ class SeleniumNotificationTestCase(SeleniumBaseTestCase):
 
         self.assertEqual(len(mail.outbox), 1)
         self.assertEqual(mail.outbox[0].subject, 'Nueva votación creada')
-        self.assertNotEqual(mail.outbox[0].to, ['testuser@gmail.com'])   #Se envía un correo pero no al usuario que no puede participar                                   
+        self.assertNotEqual(mail.outbox[0].to, ['testuser@gmail.com'])   #Se envía un correo pero no al usuario que no puede participar         
+
+    # Prueba mixta de las dos anteriores
+    def test_send_email_voting_start_mix(self):
+        self.login()
+
+        self.credentials = {
+            'username': 'testuser',
+            'password': 'decide1234',
+            'email': 'testuser@gmail.com'}
+
+
+        User.objects.create_user(**self.credentials)
+        user=User.objects.get(username="testuser")
+        user.groups.set(['102'])
+        self.assertTrue(user.is_active)
+
+
+        self.credentials = {
+            'username': 'testuser2',
+            'password': 'decide1234',
+            'email': 'testuser2@gmail.com'}
+
+        User.objects.create_user(**self.credentials)
+        user=User.objects.get(username="testuser2")
+        user.groups.set(['103'])
+        self.assertTrue(user.is_active)
+
+        self.driver.find_element_by_link_text('Votings').click()
+        self.driver.find_element_by_class_name('object-tools').click()
+        self.driver.find_element_by_id('id_name').send_keys('Votacion de prueba')
+        self.driver.find_element_by_id('id_desc').send_keys('prueba')
+
+        select = Select(self.driver.find_element_by_id('id_question'))
+        select.select_by_visible_text('pregunta de prueba')
+
+        self.driver.find_element_by_id('id_groups').send_keys('103')
+
+        select = Select(self.driver.find_element_by_id('id_auths'))
+        select.select_by_visible_text('http://localhost:8000')
+
+        self.driver.find_element_by_name('_save').click()  
+        self.driver.get(f'{self.live_server_url}/admin/voting/voting/')
+        self.driver.find_element_by_name('_selected_action').click()
+        self.driver.find_element_by_xpath("//select[@name='action']/option[text()='Start']").click()
+        self.driver.find_element_by_name('index').click()
+        self.driver.find_element_by_link_text('TERMINAR SESIÓN').click()    
+      
+
+
+        self.assertEqual(len(mail.outbox), 1)               
+        self.assertEqual(mail.outbox[0].subject, 'Nueva votación creada')
+        self.assertEqual(mail.outbox[0].to,['testuser2@gmail.com'])      #Se envía el correo al usuario que puede participar
+        self.assertNotEqual(mail.outbox[0].to, ['testuser@gmail.com'])   #Se envía un correo pero no al usuario que no puede participar                             
 

@@ -106,4 +106,5 @@ jobs:
           heroku_app_name: "decide-part-chullo-2"
           heroku_email: "vicdiacor@alum.us.es"
           branch: "defensaM3/grupo2"
+          remote_branch: "main"
     - run: heroku run -a "decide-part-chullo-2" sh -c "python decide/manage.py shell -c \"from django.contrib.auth.models import User; User.objects.filter(username='admin') or User.objects.create_superuser('admin', 'admin@example.com', 'admin')\""

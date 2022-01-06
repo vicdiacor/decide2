@@ -212,7 +212,7 @@ class ImportExportGroup(View):
     ### Importar/Exportar
 
 
-    FILE_PATH = 'authentication/files/'
+    FILE_PATH = 'census/files/'
     FORMATS = {'excel':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'txt': 'text/plain'}
 
 

@@ -33,7 +33,13 @@ group_successfully_created = "Grupo creado con éxito"
 operations_template = 'group_operations.html'
 
 from django.views.generic.base import View
-from census.import_and_export import *
+
+from census.import_and_export import readExcelFile
+from census.import_and_export import readTxtFile
+from census.import_and_export import createGroup
+from census.import_and_export import readExcelFile
+from census.import_and_export import writeInExcelUsernames
+
 from census.forms import *
 import os
 from django.core.files.storage import default_storage

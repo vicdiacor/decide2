@@ -15,10 +15,12 @@ on:
     branches:
       - master
       - develop
+      - defensaM3/grupo2
   pull_request:
     branches:
       - master
       - develop
+      - defensaM3/grupo2
 
 
   workflow_call:

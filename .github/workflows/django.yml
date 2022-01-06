@@ -60,7 +60,7 @@ jobs:
         pip install codacy-coverage
     - name: print secrets
       run: |
-        echo $DEV_ENV_FILE >> decide/decide/.env
+        echo $DEV_ENV_FILE >> /home/runner/work/decide/decide/.env
     - name: Run migrations        
       run: cd decide;python manage.py migrate
     - name: Run tests     

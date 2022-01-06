@@ -205,7 +205,7 @@ except ImportError:
     'voting': 'https://decide-part-chullo-2.herokuapp.com',
     }
 
-    BASEURL =  'https://decide-part-chullo-2.herokuapp.com/'
+    BASEURL =  'https://decide-part-chullo-2.herokuapp.com'
 
     DATABASES = dict()
 

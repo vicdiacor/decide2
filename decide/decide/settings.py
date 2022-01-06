@@ -194,20 +194,20 @@ try:
     from local_settings import *
 except ImportError:
     
-   # deploy_type= env("DEPLOY_TYPE")
-   # print("Tipo de despliegue: ", deploy_type)
-    #if deploy_type=='heroku':
+    deploy_type= env("DEPLOY_TYPE")
+    print("Tipo de despliegue: ", deploy_type)
+    if deploy_type=='heroku':
         
         APIS = {
-        'authentication': 'https://decide-part-chullo-2.herokuapp.com',
-        'base': 'https://decide-part-chullo-2.herokuapp.com',
-        'booth': 'https://decide-part-chullo-2.herokuapp.com',
-        'census': 'https://decide-part-chullo-2.herokuapp.com',
-        'mixnet': 'https://decide-part-chullo-2.herokuapp.com',
-        'postproc': 'https://decide-part-chullo-2.herokuapp.com',
-        'store': 'https://decide-part-chullo-2.herokuapp.com',
-        'visualizer': 'https://decide-part-chullo-2.herokuapp.com',
-        'voting': 'https://decide-part-chullo-2.herokuapp.com',
+            'authentication': 'https://decide-part-chullo-2.herokuapp.com',
+            'base': 'https://decide-part-chullo-2.herokuapp.com',
+            'booth': 'https://decide-part-chullo-2.herokuapp.com',
+            'census': 'https://decide-part-chullo-2.herokuapp.com',
+            'mixnet': 'https://decide-part-chullo-2.herokuapp.com',
+            'postproc': 'https://decide-part-chullo-2.herokuapp.com',
+            'store': 'https://decide-part-chullo-2.herokuapp.com',
+            'visualizer': 'https://decide-part-chullo-2.herokuapp.com',
+            'voting': 'https://decide-part-chullo-2.herokuapp.com',
         }
 
         BASEURL =  'https://decide-part-chullo-2.herokuapp.com'
@@ -216,26 +216,26 @@ except ImportError:
 
         DATABASES['default'] =  dj_database_url.config()
         django_heroku.settings(locals())
-        print("settings.py configured for heroku or github")
-''' 
-        elif deploy_type=='github':
-            print("Configurando settings.py para github")
+        print("settings.py configured for heroku")
 
-            BASEURL = 'http://localhost:8000'
+    elif deploy_type=='github':
+        print("Configurando settings.py para github")
 
-            APIS = {
-                'authentication': BASEURL,
-                'base': BASEURL,
-                'booth': BASEURL,
-                'census': BASEURL,
-                'mixnet': BASEURL,
-                'postproc': BASEURL,
-                'store': BASEURL,
-                'visualizer': BASEURL,
-                'voting': BASEURL,
-            }
-            print("settings.py configured for the GitHub virtual machine ")
-'''
+        BASEURL = 'http://localhost:8000'
+
+        APIS = {
+            'authentication': BASEURL,
+            'base': BASEURL,
+            'booth': BASEURL,
+            'census': BASEURL,
+            'mixnet': BASEURL,
+            'postproc': BASEURL,
+            'store': BASEURL,
+            'visualizer': BASEURL,
+            'voting': BASEURL,
+        }
+        print("settings.py configured for the GitHub virtual machine ")
+
 # loading jsonnet config
 if os.path.exists("config.jsonnet"):
     import json

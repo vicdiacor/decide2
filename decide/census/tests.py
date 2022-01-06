@@ -432,6 +432,9 @@ class GroupOperationsTestCases(SeleniumBaseTestCase):
 
 class ImportAndExportGroupTestCase(TestCase):
 
+    FILE_PATH = '/'.join(__file__.split('/')[:-1])
+
+
     def setUp(self):
         g1 = ParentGroup(name='Grupo 1', pk=100)
         g1.save()
@@ -472,7 +475,9 @@ class ImportAndExportGroupTestCase(TestCase):
     # Prueba la función "readTxtFile"
     def test_read_txt_file(self):
 
-        file1 = open('census/files/testfiles/testgroup1.txt', 'rb')
+        FILE_PATH = self.FILE_PATH
+
+        file1 = open(FILE_PATH + '/files/testfiles/testgroup1.txt', 'rb')
         users_list_1 = readTxtFile(file1)
 
         # Comproba cada usuario de la lista devuelta
@@ -484,7 +489,7 @@ class ImportAndExportGroupTestCase(TestCase):
         self.assertEquals(users_list_1[4], User.objects.get(username='username4'))
 
         # Comprueba que devuelve None si algún usuario del fichero no existe
-        file2 = open('census/files/testfiles/testgroup2.txt', 'rb')
+        file2 = open(FILE_PATH + '/files/testfiles/testgroup2.txt', 'rb')
         users_list_2 = readTxtFile(file2)
         self.assertEquals(users_list_2, None)
 
@@ -535,7 +540,10 @@ class ImportAndExportGroupTestCase(TestCase):
 
     # Prueba la función "readExcelFile"
     def test_read_excel_file(self):
-        users_list_1 = readExcelFile('census/files/testfiles/testgroup1.xlsx')
+
+        FILE_PATH = self.FILE_PATH
+
+        users_list_1 = readExcelFile(FILE_PATH + '/files/testfiles/testgroup1.xlsx')
 
         # Comproba cada usuario de la lista devuelta
         self.assertTrue(len(users_list_1)==5)
@@ -546,7 +554,7 @@ class ImportAndExportGroupTestCase(TestCase):
         self.assertEquals(users_list_1[4], User.objects.get(username='username4'))
 
         # Comprueba que devuelve None si algún usuario del fichero no existe
-        users_list_2 = readExcelFile('census/files/testfiles/testgroup2.xlsx')
+        users_list_2 = readExcelFile(FILE_PATH + '/files/testfiles/testgroup2.xlsx')
         self.assertEquals(users_list_2, None)
 
 
@@ -568,8 +576,10 @@ class ImportAndExportGroupTestCase(TestCase):
     # Prueba la función "writeInExcelUsernames"
     def test_write_in_excel_usernames(self):
         # Fichero correcto
+        FILE_PATH = self.FILE_PATH
+
         users = User.objects.all()
-        path = 'census/files/temp_export.xlsx'
+        path = FILE_PATH + '/files/temp_export.xlsx'
         name = 'temp_export.xlsx'
         writeInExcelUsernames(users, path, name)
 
@@ -588,6 +598,8 @@ class ImportAndExportGroupTestCase(TestCase):
 
 
 class ImportAndExportGroupSeleniumTestCase(SeleniumBaseTestCase):
+
+    FILE_PATH = '/'.join(__file__.split('/')[:-1])
 
     def setUp(self):
         g1 = ParentGroup(name='Grupo 1', pk=100)
@@ -626,11 +638,13 @@ class ImportAndExportGroupSeleniumTestCase(SeleniumBaseTestCase):
 
 
     def test_import_group(self):
+        FILE_PATH = self.FILE_PATH
+
         self.login()
         self.driver.get(f"{self.live_server_url}/census/groups/import/")
         self.driver.find_element_by_id('id_name').send_keys('Grupo 3')
         self.driver.find_element_by_id('id_is_public').click()
-        self.driver.find_element_by_id('id_file').send_keys(os.getcwd() + "/census/files/testfiles/testgroup1.txt")
+        self.driver.find_element_by_id('id_file').send_keys(FILE_PATH + "/files/testfiles/testgroup1.txt")
         self.driver.find_element_by_xpath("//input[@value='Importar']").click()
 
         result = True
@@ -643,7 +657,7 @@ class ImportAndExportGroupSeleniumTestCase(SeleniumBaseTestCase):
 
         self.driver.find_element_by_id('id_name').clear()
         self.driver.find_element_by_id('id_name').send_keys('Grupo 4')
-        self.driver.find_element_by_id('id_file').send_keys(os.getcwd() + "/census/files/testfiles/testgroup1.xlsx")
+        self.driver.find_element_by_id('id_file').send_keys(FILE_PATH + "/files/testfiles/testgroup1.xlsx")
         self.driver.find_element_by_xpath("//input[@value='Importar']").click()
 
         result = True
@@ -660,10 +674,13 @@ class ImportAndExportGroupSeleniumTestCase(SeleniumBaseTestCase):
 
     # Prueba si se introduce un nombre de grupo ya existente
     def test_import_group_name_already_exists(self):
+
+        FILE_PATH = self.FILE_PATH
+
         self.login()
         self.driver.get(f"{self.live_server_url}/census/groups/import/")
         self.driver.find_element_by_id('id_name').send_keys('Grupo 2')
-        self.driver.find_element_by_id('id_file').send_keys(os.getcwd() + "/census/files/testfiles/testgroup3.txt")
+        self.driver.find_element_by_id('id_file').send_keys(FILE_PATH + "/files/testfiles/testgroup3.txt")
         self.driver.find_element_by_xpath("//input[@value='Importar']").click()
 
         # Comprueba que aparece un mensaje de éxito
@@ -696,10 +713,12 @@ class ImportAndExportGroupSeleniumTestCase(SeleniumBaseTestCase):
 
     # Prueba qué ocurre si se envía el formulario con el nombre vacío o solo
     def test_import_group_name_empty(self):
+        FILE_PATH = self.FILE_PATH
+
         self.login()
         self.driver.get(f"{self.live_server_url}/census/groups/import/")
         self.driver.find_element_by_id('id_name').send_keys(' ')
-        self.driver.find_element_by_id('id_file').send_keys(os.getcwd() + "/census/files/testfiles/testgroup1.txt")
+        self.driver.find_element_by_id('id_file').send_keys(FILE_PATH + "/files/testfiles/testgroup1.txt")
         self.driver.find_element_by_xpath("//input[@value='Importar']").click()
 
         # Comprueba que se muestra un mensaje de error
@@ -715,10 +734,12 @@ class ImportAndExportGroupSeleniumTestCase(SeleniumBaseTestCase):
 
     # Prueba si se introduce un fichero con un username que no existe
     def test_import_wrong_username(self):
+        FILE_PATH = self.FILE_PATH
+
         self.login()
         self.driver.get(f"{self.live_server_url}/census/groups/import/")
         self.driver.find_element_by_id('id_name').send_keys('Grupo 2')
-        self.driver.find_element_by_id('id_file').send_keys(os.getcwd() + "/census/files/testfiles/testgroup2.txt")
+        self.driver.find_element_by_id('id_file').send_keys(FILE_PATH + "/files/testfiles/testgroup2.txt")
         self.driver.find_element_by_xpath("//input[@value='Importar']").click()
 
         # Comprueba que aparece un mensaje de error

@@ -64,6 +64,7 @@ jobs:
     - name: print secrets
       run: |
         echo $DEV_ENV_FILE >> decide/decide/.env
+        echo "DEPLOY_TYPE=github" >> decide/decide/.env
     - name: Run migrations        
       run: cd decide;python manage.py migrate
     - name: Run tests     
@@ -82,7 +83,7 @@ jobs:
     - name: print secrets
       run: |
         echo $DEV_ENV_FILE >> decide/decide/.env 
-        echo 'DEPLOY_TYPE=heroku' >> decide/decide/.env
+        echo "DEPLOY_TYPE=heroku" >> decide/decide/.env
     - uses: akhileshns/heroku-deploy@v3.12.12 # This is the action
       with:
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}
@@ -98,7 +99,7 @@ jobs:
     - name: print secrets
       run: |
         echo $DEV_ENV_FILE >> decide/decide/.env 
-        echo 'DEPLOY_TYPE=heroku' >> decide/decide/.env
+        echo "DEPLOY_TYPE=heroku" >> decide/decide/.env
     - uses: akhileshns/heroku-deploy@v3.12.12 # This is the action
       with:
           heroku_api_key: ${{secrets.HEROKU_API_KEY_2}}
